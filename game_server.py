@@ -31,11 +31,13 @@ class GameRoomServer(object):
         headers = [("Content-type", "text/html")]
         try:
             path = environ.get('PATH_INFO', None)
-            query = environ.get('QUERY_STRING', None)
+            request_size = int(environ.get('CONTENT_LENGTH', 0))
+            request_body = environ['wsgi.input'].read(request_size)
+            args = parse_qs(request_body)
             if path is None:
                 raise NameError
-            func, args = resolve_path(path, query)
-            body = func(*args)
+            func = resolve_path(path, query)
+            body = func(**args)
             status = "200 OK"
         except NameError:
             status = "404 Not Found"
@@ -50,7 +52,7 @@ class GameRoomServer(object):
 
     def _resolve_path(self, path):
         """Private method that resolves the url received when the class
-        is called."""
+        is called. The url is mapped onto one of the class methods."""
 
         urls = [
             (r'^$', self.poll_lobby_status),
@@ -67,8 +69,7 @@ class GameRoomServer(object):
             match = re.match(regexp, matchpath)
             if match is None:
                 continue
-            args = match.groups([])
-            return func, args
+            return func
         raise NameError
 
     def poll_lobby_status(self):
@@ -82,7 +83,7 @@ class GameRoomServer(object):
         else:
             return self.lobby
 
-    def lobby(self, idnum=None):
+    def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
         user gets back a version that is tailored to that id number. If
         not, the player gets a version of the page that allows them only
@@ -157,7 +158,7 @@ class GameRoomServer(object):
 
         return page
 
-    def lobby_join(self, username):
+    def lobby_join(self, username="Player", **kwargs):
         """Allows the player to join the game in the lobby. Adds their new
         username and id to the game server object, then returns a
         version of the lobby page that is tailored to that id.
@@ -170,7 +171,7 @@ class GameRoomServer(object):
 
         return self.lobby(idnum)
 
-    def lobby_vote(self, idnum):
+    def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in the
         lobby. If all players have voted to start, it returns the game room
         and changes the status of the game server object to reflect that
@@ -193,7 +194,7 @@ class GameRoomServer(object):
         else:
             return self.lobby(idnum)
 
-    def lobby_edit(self, idnum, username):
+    def lobby_edit(self, idnum=None, username="Player", **kwargs):
         """Allows the user with the given id number to change their username
         to the username passed in.
         """
@@ -201,7 +202,7 @@ class GameRoomServer(object):
         self.users[idnum][0] = username
         return self.lobby(idnum)
 
-    def game_room(self, idnum):
+    def game_room(self, idnum=None, **kwargs):
         pass
 
 
