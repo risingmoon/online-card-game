@@ -9,6 +9,10 @@ class GameTest(unittest.TestCase):
     def setUp(self):
         self.game = Game()
 
+    def setUp_players(self):
+        for name in NAMES:
+            self.game.add_player(name)
+
     def test_player_size(self):
         self.assertEquals(len(self.game.players_list), self.game.players_size)
 
