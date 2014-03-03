@@ -2,8 +2,6 @@ from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
 from urlparse import parse_qs
 import re
-import requests
-import game_placeholder
 
 
 class GameRoomServer(object):
@@ -13,7 +11,7 @@ class GameRoomServer(object):
 
     def __init__(self):
         """Initialize the game room with a game object."""
-        self.game = game_placeholder.Game()
+        #self.game = game_placeholder.Game()
 
         #Each user can be tied with a Player object in the game.
         self.users = {}
@@ -31,13 +29,13 @@ class GameRoomServer(object):
         headers = [("Content-type", "text/html")]
         try:
             path = environ.get('PATH_INFO', None)
-            request_size = int(environ.get('CONTENT_LENGTH', 0))
-            request_body = environ['wsgi.input'].read(request_size)
-            args = parse_qs(request_body)
             if path is None:
                 raise NameError
-            func = resolve_path(path, query)
-            body = func(**args)
+            request_size = int(environ.get('CONTENT_LENGTH', 0))
+            request_body = environ['wsgi.input'].read(request_size)
+            kwargs = parse_qs(request_body)
+            func = self._resolve_path(path)
+            body = func(**kwargs)
             status = "200 OK"
         except NameError:
             status = "404 Not Found"
@@ -72,16 +70,16 @@ class GameRoomServer(object):
             return func
         raise NameError
 
-    def poll_lobby_status(self):
+    def poll_lobby_status(self, **kwargs):
         """Determines whether we're in-game or in the lobby and returns
         the appropriate callable. Used by the dispatcher to determine
         where to send the user.
         """
 
         if self.in_game:
-            return self.game_room
+            return self.game_room(**kwargs)
         else:
-            return self.lobby
+            return self.lobby(**kwargs)
 
     def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
@@ -99,12 +97,12 @@ class GameRoomServer(object):
         if idnum:
             page += """
     <div>
-        <form method="POST" action="lobby/edit">
+        <form method="POST" action="edit">
             <input type="text" name="username" value="%s"/>
             <input type="submit" name="submit" value="Change Username" />
             <input type="hidden" name="idnum" value="%s" />
         </form>
-        <form method="POST" action="lobby/vote">
+        <form method="POST" action="vote">
             <input type="submit" value="Change Vote" />
             <input type="hidden" value="%s" />
         </form>
@@ -151,7 +149,7 @@ class GameRoomServer(object):
 
         page += """
     </table>
-    <form method="POST" action="lobby/update">
+    <form method="POST" action="update">
         <input type="submit" value="Update" />
     </form>
 </center>"""
@@ -203,7 +201,7 @@ class GameRoomServer(object):
         return self.lobby(idnum)
 
     def game_room(self, idnum=None, **kwargs):
-        pass
+        return "<h1>We are in-game.</h1>"
 
 
 if __name__ == '__main__':
