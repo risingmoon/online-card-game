@@ -18,7 +18,9 @@ class Game:
 
     def add_player(self, name):
         self.players_size += 1
-        self.players_list.append(Player(name))
+        new_player = Player(name)
+        self.players_list.append(new_player)
+        return new_player
 
     def remove_player(self, name):
         pass
@@ -43,7 +45,7 @@ class Game:
         big_blind = self.players_list[self.mod(self.dealer, 2)]
         self.last_raised = self.mod(self.dealer, 3)
         small_blind.call(self.small_blind_points)
-        big_blind.call(sel.big_blind_points)
+        big_blind.call(self.big_blind_points)
 
     def active(self, player):
         return self.player.active
