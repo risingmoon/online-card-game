@@ -50,10 +50,7 @@ class GameRoomServer(object):
             #out of the url, if present.
             if arg:
                 kwargs['idnum'] = str(arg)
-            print func
-            print kwargs
             body, header = func(**kwargs)
-            print "returned from function"
         except NameError:
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
@@ -83,6 +80,7 @@ class GameRoomServer(object):
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
+            (r'^game$', self.game_room),
             (r'^game/(\d+)$', self.game_room),
         ]
 
@@ -239,7 +237,7 @@ class GameRoomServer(object):
 
         if votecheck:
             self.in_game = True
-            return self.game_redirect(idnum=idnum)
+            return self.game_room_redirect(idnum=idnum)
         else:
             return self.lobby_redirect(idnum=idnum)
 
@@ -252,7 +250,7 @@ class GameRoomServer(object):
         return self.lobby_redirect(idnum=idnum)
 
     def game_room(self, idnum=None, **kwargs):
-        return "<h1>We are in-game.</h1>"
+        return "<h1>We are in-game.</h1>", None
 
     def game_room_redirect(self, idnum=None, **kwargs):
         """Redirect the player to the game room."""
