@@ -32,12 +32,31 @@ class Game:
         points, choose a dealer, and set the big and small blind
         accordingly.
         """
-
         for player in self.players_list:
             player.points = self.initial_points
 
         #For now the first player to join the lobby is made the dealer.
         self._set_dealer_and_blinds(dealer=0)
+
+    def update_game(self, bet=0):
+        """Function called when a player concludes their turn. Expects a
+        value that is the amount of the bet just placed (if any) so that
+        that amount can be added to the pot.
+        """
+        if bet:
+            self.pot += bet
+            self.last_raise = self.current_player
+
+        self._next_player_turn()
+
+        #If all players but one have folded.
+        if self._poll_active_players() == 1:
+            self.end_round()
+
+        #If we have made it around the table to the last player who raised,
+        #and no additional raises have been made.
+        if self.last_raise is self.current_player:
+            pass
 
     def _set_dealer_and_blinds(self, dealer=None):
         """Assign one player the role of dealer and the next two players
@@ -80,6 +99,15 @@ class Game:
             self.current_player %= self.players_size
 
         self.players_list[self.current_player].turn = True
+
+    def _poll_active_players(self):
+        """Find out how many players are active (haven't folded)."""
+        active_players = 0
+        for player in self.players_list:
+            if player.active:
+                active_players += 1
+
+        return active_players
 
     def end_round(self):
         for index in self.players_size:
