@@ -23,6 +23,7 @@ class GameRoomServer(object):
         #Keep track of the next id number that can be allocated.
         self.next_id = 1
 
+        #For asbolute redirects. Leave blank to redirect by relative URL.
         self.base_url = ''
 
     def __call__(self, environ, start_response):
@@ -33,6 +34,8 @@ class GameRoomServer(object):
             path = environ.get('PATH_INFO', None)
             if path is None:
                 raise NameError
+
+            #Parse out POST request information.
             request_size = int(environ.get('CONTENT_LENGTH', 0))
             request_body = environ['wsgi.input'].read(request_size)
             kwargs = parse_qs(request_body)
@@ -50,21 +53,26 @@ class GameRoomServer(object):
             #out of the url, if present.
             if arg:
                 kwargs['idnum'] = str(arg)
+
             body, header = func(**kwargs)
+
         except NameError:
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
             header = None
+
         except Exception:
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
             header = None
+
         finally:
             if header:
                 status = "301 Redirect"
                 headers.append(header)
             else:
                 status = "200 OK"
+
             headers.append(('Content-length', str(len(body))))
             start_response(status, headers)
             return [body]
@@ -88,8 +96,10 @@ class GameRoomServer(object):
 
         for regexp, func in urls:
             match = re.match(regexp, matchpath)
+
             if match is None:
                 continue
+
             arg = match.groups([])
             arg = arg[0] if arg else None
 
@@ -141,7 +151,7 @@ class GameRoomServer(object):
     <div>
         <form method="POST" action="/lobby/edit">
             <input type="text" name="username" value="%s"/>
-            <input type="submit" name="submit" value="Change Username" />
+            <input type="submit" value="Change Username" />
             <input type="hidden" name="idnum" value="%s" />
         </form>
         <form method="POST" action="/lobby/vote">
@@ -158,7 +168,7 @@ class GameRoomServer(object):
     <div>
         <form method="POST" action="/lobby/join">
             <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" name="submit" value="Join" />
+            <input type="submit" value="Join" />
         </form>
     </div>"""
 
@@ -200,6 +210,7 @@ class GameRoomServer(object):
 
     def lobby_redirect(self, idnum=None, **kwargs):
         """Redirect the player to the lobby."""
+
         if idnum:
             return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
         else:
@@ -207,8 +218,8 @@ class GameRoomServer(object):
 
     def lobby_join(self, username="Player", **kwargs):
         """Allows the player to join the game in the lobby. Adds their new
-        username and id to the game server object, then returns a
-        version of the lobby page that is tailored to that id.
+        username and id to the game server object, then returns a redirect
+        to a version of the lobby page that is tailored to that id.
         """
 
         idnum = str(self.next_id)
@@ -220,10 +231,10 @@ class GameRoomServer(object):
 
     def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in the
-        lobby. If all players have voted to start, it returns the game room
-        and changes the status of the game server object to reflect that
-        we're now ingame. Otherwise, it returns a version of the lobby
-        that reflects the changed vote.
+        lobby. If all players have voted to start, it returns a redirect
+        to the game room and changes the status of the game server object
+        to reflect that we're now ingame. Otherwise, it returns a redirect
+        to a version of the lobby that reflects the changed vote.
         """
 
         self.users[idnum][1] = \
