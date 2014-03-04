@@ -75,6 +75,10 @@ class Game:
         self.players_list[self.current_player].turn = False
         self.current_player += 1
         self.current_player %= self.players_size
+        while(not self.players_list[self.current_player].active):
+            self.current_player += 1
+            self.current_player %= self.players_size
+
         self.players_list[self.current_player].turn = True
 
     def end_round(self):
