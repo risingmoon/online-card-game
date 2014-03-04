@@ -18,7 +18,19 @@ class Game:
         self.big_blind_points = 10
         self.initial_points = 100
 
+    #The game's API consists entirely of these 3 (possibly 4) methods:
+    #add_player, MAYBE remove_player, initialize_game, and update_game.
+    #add_player is called to put players into the game before starting it.
+    #remove_player allows a player to be dropped from the game.
+    #initialize_game is called after all players have been added and takes
+    #care of everything related to starting the game.
+    #update_game is called every time a player ends their turn to update
+    #the internal state of the game to reflect that player's actions.
+
     def add_player(self, name):
+        """Create a new Player object and add it to the game. Return a
+        reference to the Player object just created.
+        """
         self.players_size += 1
         new_player = Player(name)
         self.players_list.append(new_player)
@@ -29,8 +41,8 @@ class Game:
 
     def initialize_game(self):
         """When called, we allocate to each player a beginning number of
-        points, initialize the first round, and then begin the first
-        betting cycle.
+        points and initialize the first round. The first betting cycle
+        then begins implicitly.
         """
         for player in self.players_list:
             player.points = self.initial_points
@@ -38,19 +50,24 @@ class Game:
         #For now the first player to join the lobby is made the dealer.
         self._initialize_round(dealer=0)
 
-    def update_game(self, bet=0):
-        """Function called when a player concludes their turn. Expects a
-        value that is the amount of the bet just placed (if any) so that
-        that amount can be added to the pot. This function also decides
-        when a betting cycle is over and when a round is won.
+    def update_game(self, bet=0, fold=False):
+        """Function that updates the internal state of the game whenever
+        a player concludes their turn. Takes as an argument the amount of
+        the bet (if any) placed by that player and whether or not that
+        player folded.
         """
+
+        #EVENTUALLY this function will need to validate the actions just
+        #made by the player.
+
+        if fold:
+            #If all players but one have folded.
+            if self._poll_active_players() == 1:
+                self.end_round
+
         if bet:
             self.pot += bet
             self.last_raise = self.current_player
-
-        #If all players but one have folded.
-        if self._poll_active_players() == 1:
-            self.end_hand()
 
         self._next_player_turn()
 
@@ -81,6 +98,9 @@ class Game:
         big_blind = self.small_blind + 1
         big_blind %= self.players_size
 
+        first_turn = self.big_blind + 1
+        first_turn %= self.players_size
+
         #Clear all the attributes on players left over from the last round.
         for player in self.players_list:
             player.clear_round_attributes()
@@ -90,12 +110,13 @@ class Game:
         self.players_list[self.dealer].dealer = True
 
         self.players_list[small_blind].small_blind = True
-        self.players_list[small_blind].turn = True
 
         self.players_list[big_blind].big_blind = True
+        self.last_raise = big_blind
 
-        #The small blind is to the left of the dealer, so their turn is first.
-        self.current_player = small_blind
+        #The player to the left of the big blind gets the first turn.
+        self.current_player = first_turn
+        self.players_list[first_turn].turn = True
 
         #Force the small blind and big blind to place their bets.
         self.players_list[small_blind].call(self.small_blind_points)
@@ -104,13 +125,17 @@ class Game:
         #Deal two cards to each player.
         #TBD
 
-    #This function has been wrapped into _initialize_round
+    #These functions have been wrapped into _initialize_round.
     # def blinds(self):
     #     small_blind = self.players_list[self.mod(self.dealer, 1)]
     #     big_blind = self.players_list[self.mod(self.dealer, 2)]
     #     self.last_raised = self.mod(self.dealer, 3)
     #     small_blind.call(self.small_blind_points)
     #     big_blind.call(self.big_blind_points)
+
+    # def end_round(self):
+    #     for index in self.players_size:
+    #         self.players_list[index].active = True
 
     def _next_player_turn(self):
         """Give the next player their turn. Find the next player from
@@ -135,10 +160,6 @@ class Game:
                 active_players += 1
 
         return active_players
-
-    def end_round(self):
-        for index in self.players_size:
-            self.players_list[index].active = True
 
     def run_round(self):
         player_index = (self.last_raise + 1) % self.players_size
