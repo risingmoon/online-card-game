@@ -14,7 +14,8 @@ class Game:
         self.dealer = 0
         self.last_raise = 0
         self.small_blind_points = 5
-        self.big_blind_point = 10
+        self.big_blind_points = 10
+        self.initial_points = 100
 
     def add_player(self, name):
         self.players_size += 1
@@ -24,6 +25,43 @@ class Game:
 
     def remove_player(self, name):
         pass
+
+    def initialize_game(self):
+        """When called, we allocate to each player a beginning number of
+        points, choose a dealer, and set the big and small blind
+        accordingly.
+        """
+
+        for player in self.players_list:
+            player.points = self.initial_points
+
+        #For now the first player to join the lobby is made the dealer.
+        self.dealer = 0
+        self.set_dealer_and_blinds(dealer=self.dealer)
+
+    def _set_dealer_and_blinds(self, dealer=None):
+        """Assign one player the role of dealer and the next two players
+        the roles of small blind and big blind. If the "dealer" argument
+        is passed in, the game forces that player to be the dealer.
+        Otherwise, it looks at its internal self.dealer and assigns to the
+        NEXT player the role of dealer.
+        """
+        if dealer:
+            self.dealer = dealer
+        else:
+            self.dealer += 1
+            self.dealer %= self.players_size
+
+        small_blind = self.dealer + 1
+        small_blind %= self.players_size
+
+        big_blind = self.small_blind + 1
+        big_blind %= self.players_size
+
+        self.players_list[self.dealer].set_attributes(dealer=True)
+        self.players_list[small_blind].set_attributes(
+            small_blind=True, turn=True)
+        self.players_list[big_blind].set_attributes(big_blind=True)
 
     def end_round(self):
         for index in self.players_size:
