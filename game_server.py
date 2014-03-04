@@ -74,7 +74,7 @@ class GameRoomServer(object):
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
             (r'^lobby/update$', self.poll_lobby_status),
-            (r'^game$', self.game_room),
+            (r'^game/(\d+)$', self.game_room),
         ]
 
         matchpath = path.lstrip('/')
@@ -93,7 +93,7 @@ class GameRoomServer(object):
         """
 
         if self.in_game:
-            return ('', ('Location', "%s/game_room" % self.base_url))
+            return ('', ('Location', "%s/game/" % self.base_url))
         else:
             return ('', ('Location', "%s/lobby" % self.base_url))
 
@@ -103,9 +103,6 @@ class GameRoomServer(object):
         not, the player gets a version of the page that allows them only
         to join and view the list of players.
         """
-        #import pdb; pdb.set_trace()
-        if idnum:
-            idnum = int(idnum)
 
         page = """
 <center>
@@ -182,7 +179,7 @@ class GameRoomServer(object):
         version of the lobby page that is tailored to that id.
         """
 
-        idnum = self.next_id
+        idnum = str(self.next_id)
         self.next_id += 1
 
         self.users[idnum] = [username, 'No']
@@ -197,13 +194,8 @@ class GameRoomServer(object):
         that reflects the changed vote.
         """
 
-        if idnum:
-            idnum = int(idnum)
-
         self.users[idnum][1] = \
             'Yes' if (self.users[idnum][1] == 'No') else 'No'
-
-        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
         votecheck = True
         for userid in self.users:
@@ -213,17 +205,14 @@ class GameRoomServer(object):
 
         if votecheck:
             self.in_game = True
-            return self.game_room(idnum)
+            return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
         else:
-            return self.lobby(idnum)
+            return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
     def lobby_edit(self, idnum=None, username="Player", **kwargs):
         """Allows the user with the given id number to change their username
         to the username passed in.
         """
-
-        if idnum:
-            idnum = int(idnum)
 
         self.users[idnum][0] = username
         return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
