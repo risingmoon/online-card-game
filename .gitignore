@@ -1,3 +1,4 @@
+fabfile.*
 *.py[cod]
 
 # C extensions
