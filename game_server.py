@@ -35,8 +35,7 @@ class GameRoomServer(object):
             request_body = environ['wsgi.input'].read(request_size)
             kwargs = parse_qs(request_body)
             func = self._resolve_path(path)
-            body = func(**kwargs)
-            status = "200 OK"
+            body, header = func(**kwargs)
         except NameError:
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
@@ -44,6 +43,11 @@ class GameRoomServer(object):
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
         finally:
+            if header:
+                status = "301 Redirect"
+                headers.append(header)
+            else:
+                status = "200 OK"
             headers.append(('Content-length', str(len(body))))
             start_response(status, headers)
             return [body]
@@ -154,7 +158,7 @@ class GameRoomServer(object):
     </form>
 </center>"""
 
-        return page
+        return (page, None)
 
     def lobby_join(self, username="Player", **kwargs):
         """Allows the player to join the game in the lobby. Adds their new
