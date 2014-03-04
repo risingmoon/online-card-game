@@ -37,13 +37,23 @@ class GameRoomServer(object):
             request_body = environ['wsgi.input'].read(request_size)
             kwargs = parse_qs(request_body)
 
+            #By default, parse_qs returns lists of values that were passed
+            #for each keyword in the query string. We're expecting only one
+            #value for each, so here we pull the first (and only) value
+            #out of the list and assign it directly to the keyword in kwargs.
             for key, val in kwargs.iteritems():
                 kwargs[key] = val[0]
 
             func, arg = self._resolve_path(path)
+
+            #Overwrite idnum argument with corresponding argument parsed
+            #out of the url, if present.
             if arg:
                 kwargs['idnum'] = str(arg)
+            print func
+            print kwargs
             body, header = func(**kwargs)
+            print "returned from function"
         except NameError:
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
@@ -67,35 +77,52 @@ class GameRoomServer(object):
         is called. The url is mapped onto one of the class methods."""
 
         urls = [
-            (r'^$', self.poll_lobby_status),
+            (r'^$', self.redirect_from_root),
             (r'^lobby$', self.lobby),
             (r'^lobby/(\d+)$', self.lobby),
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
-            (r'^lobby/update$', self.poll_lobby_status),
             (r'^game/(\d+)$', self.game_room),
         ]
 
         matchpath = path.lstrip('/')
+
         for regexp, func in urls:
             match = re.match(regexp, matchpath)
             if match is None:
                 continue
             arg = match.groups([])
-            return func, arg[0] if arg else None
+            arg = arg[0] if arg else None
+
+            #If the user tries to get into the lobby, but a game is in
+            #session, redirect them to the game. Hold on to the arg parsed
+            #out, if applicable, so they are redirected as the appropriate
+            #user.
+            if re.match(r'^lobby', matchpath) and self.in_game:
+                return self.game_room_redirect, arg
+
+            #If the user tries to get into a game, but a game is not in
+            #session, redirect them to the lobby. Hold on to the arg parsed
+            #out, if applicable, so they are redirected as the appropriate
+            #user.
+            if re.match(r'^game', matchpath) and not self.in_game:
+                return self.lobby_redirect, arg
+
+            return func, arg
+
+        #Raise a NameError if we completely failed to map the URL.
         raise NameError
 
-    def poll_lobby_status(self, **kwargs):
-        """Determines whether we're in-game or in the lobby and returns
-        the appropriate callable. Used by the dispatcher to determine
-        where to send the user.
+    def redirect_from_root(self, **kwargs):
+        """If a user accesses the root, redirect them to either the lobby
+        or the game room based on whether or not a game is in session.
         """
 
         if self.in_game:
-            return ('', ('Location', "%s/game/" % self.base_url))
+            return self.game_room_redirect()
         else:
-            return ('', ('Location', "%s/lobby" % self.base_url))
+            return self.lobby_redirect()
 
     def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
@@ -173,6 +200,13 @@ class GameRoomServer(object):
 
         return (page, None)
 
+    def lobby_redirect(self, idnum=None, **kwargs):
+        """Redirect the player to the lobby."""
+        if idnum:
+            return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
+        else:
+            return ('', ('Location', "%s/lobby" % self.base_url))
+
     def lobby_join(self, username="Player", **kwargs):
         """Allows the player to join the game in the lobby. Adds their new
         username and id to the game server object, then returns a
@@ -184,7 +218,7 @@ class GameRoomServer(object):
 
         self.users[idnum] = [username, 'No']
 
-        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
+        return self.lobby_redirect(idnum=idnum)
 
     def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in the
@@ -205,9 +239,9 @@ class GameRoomServer(object):
 
         if votecheck:
             self.in_game = True
-            return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
+            return self.game_redirect(idnum=idnum)
         else:
-            return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
+            return self.lobby_redirect(idnum=idnum)
 
     def lobby_edit(self, idnum=None, username="Player", **kwargs):
         """Allows the user with the given id number to change their username
@@ -215,10 +249,17 @@ class GameRoomServer(object):
         """
 
         self.users[idnum][0] = username
-        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
+        return self.lobby_redirect(idnum=idnum)
 
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>"
+
+    def game_room_redirect(self, idnum=None, **kwargs):
+        """Redirect the player to the game room."""
+        if idnum:
+            return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
+        else:
+            return ('', ('Location', "%s/game" % self.base_url))
 
 
 if __name__ == '__main__':
