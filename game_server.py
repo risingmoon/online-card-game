@@ -23,6 +23,8 @@ class GameRoomServer(object):
         #Keep track of the next id number that can be allocated.
         self.next_id = 1
 
+        self.base_url = ''
+
     def __call__(self, environ, start_response):
         """When called, the GameRoomServer class behaves as a dispatcher."""
 
@@ -34,14 +36,22 @@ class GameRoomServer(object):
             request_size = int(environ.get('CONTENT_LENGTH', 0))
             request_body = environ['wsgi.input'].read(request_size)
             kwargs = parse_qs(request_body)
-            func = self._resolve_path(path)
+
+            for key, val in kwargs.iteritems():
+                kwargs[key] = val[0]
+
+            func, arg = self._resolve_path(path)
+            if arg:
+                kwargs['idnum'] = str(arg)
             body, header = func(**kwargs)
         except NameError:
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
+            header = None
         except Exception:
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
+            header = None
         finally:
             if header:
                 status = "301 Redirect"
@@ -59,6 +69,7 @@ class GameRoomServer(object):
         urls = [
             (r'^$', self.poll_lobby_status),
             (r'^lobby$', self.lobby),
+            (r'^lobby/(\d+)$', self.lobby),
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
@@ -71,7 +82,8 @@ class GameRoomServer(object):
             match = re.match(regexp, matchpath)
             if match is None:
                 continue
-            return func
+            arg = match.groups([])
+            return func, arg[0] if arg else None
         raise NameError
 
     def poll_lobby_status(self, **kwargs):
@@ -81,9 +93,9 @@ class GameRoomServer(object):
         """
 
         if self.in_game:
-            return self.game_room(**kwargs)
+            return ('', ('Location', "%s/game_room" % self.base_url))
         else:
-            return self.lobby(**kwargs)
+            return ('', ('Location', "%s/lobby" % self.base_url))
 
     def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
@@ -91,6 +103,10 @@ class GameRoomServer(object):
         not, the player gets a version of the page that allows them only
         to join and view the list of players.
         """
+        #import pdb; pdb.set_trace()
+        if idnum:
+            idnum = int(idnum)
+
         page = """
 <center>
     <h1>Lobby</h1>"""
@@ -101,12 +117,12 @@ class GameRoomServer(object):
         if idnum:
             page += """
     <div>
-        <form method="POST" action="edit">
+        <form method="POST" action="/lobby/edit">
             <input type="text" name="username" value="%s"/>
             <input type="submit" name="submit" value="Change Username" />
             <input type="hidden" name="idnum" value="%s" />
         </form>
-        <form method="POST" action="vote">
+        <form method="POST" action="/lobby/vote">
             <input type="submit" value="Change Vote" />
             <input type="hidden" value="%s" />
         </form>
@@ -118,7 +134,7 @@ class GameRoomServer(object):
         else:
             page += """
     <div>
-        <form method="POST" action="lobby/join">
+        <form method="POST" action="/lobby/join">
             <input type="text" name="username" placeholder="Username"/>
             <input type="submit" name="submit" value="Join" />
         </form>
@@ -153,10 +169,10 @@ class GameRoomServer(object):
 
         page += """
     </table>
-    <form method="POST" action="update">
+    <form method="POST" action="/lobby%s">
         <input type="submit" value="Update" />
     </form>
-</center>"""
+</center>""" % (('/%s' % idnum) if idnum else '')
 
         return (page, None)
 
@@ -171,7 +187,7 @@ class GameRoomServer(object):
 
         self.users[idnum] = [username, 'No']
 
-        return self.lobby(idnum)
+        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
     def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in the
@@ -181,8 +197,13 @@ class GameRoomServer(object):
         that reflects the changed vote.
         """
 
+        if idnum:
+            idnum = int(idnum)
+
         self.users[idnum][1] = \
             'Yes' if self.users[idnum][1] == 'No' else 'No'
+
+        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
         votecheck = True
         for userid in self.users:
@@ -201,8 +222,11 @@ class GameRoomServer(object):
         to the username passed in.
         """
 
+        if idnum:
+            idnum = int(idnum)
+
         self.users[idnum][0] = username
-        return self.lobby(idnum)
+        return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>"
