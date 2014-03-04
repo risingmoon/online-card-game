@@ -89,6 +89,7 @@ class GameRoomServer(object):
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
+            (r'^lobby/leave$', self.lobby_leave),
             (r'^game$', self.game_room),
             (r'^game/(\d+)$', self.game_room),
             (r'^game/call$', self.game_room_call),
@@ -162,7 +163,11 @@ class GameRoomServer(object):
             <input type="submit" value="Change Vote" />
             <input type="hidden" name="idnum" value="%s" />
         </form>
-    </div>""" % (self.users[idnum][0], idnum, idnum)
+        <form method="POST" action="/lobby/leave">
+            <input type="submit" value="Leave Game" />
+            <input type="hidden" name="idnum" value="%s" />
+        </form>
+    </div>""" % (self.users[idnum][0], idnum, idnum, idnum)
 
         #Otherwise, the player gets a form that allows them to join the
         #game. No hidden input with id is included: the game is not keeping
@@ -264,14 +269,33 @@ class GameRoomServer(object):
         self.users[idnum][0] = username
         return self.lobby_redirect(idnum=idnum)
 
+    def lobby_leave(self, idnum=None, **kwargs):
+        """Allows the user with the given id number to leave the game."""
+
+        del self.users[idnum]
+        return self.lobby_redirect()
+
     def _initialize_game_room(self):
         """When the game starts, this function is called to set up the game
         and all players in the game.
         """
+
+        for userid in self.users:
+            self.users[userid].append(
+                self.game.add_player(self.users[userid][0]))
+
+        self.game.run_game()
+
+        #Change self.in_game last so that players don't get into the game
+        #room while the game is still setting up.
         self.in_game = True
 
-
     def game_room(self, idnum=None, **kwargs):
+        """Builds the html for the game room. If an id number is given,
+        the user gets back a version that is tailored to that id number.
+        If not, the player gets a version of the page that allows them only
+        to spectate and update the room.
+        """
         return "<h1>We are in-game.</h1>", None
 
     def game_room_redirect(self, idnum=None, **kwargs):
@@ -282,13 +306,22 @@ class GameRoomServer(object):
             return ('', ('Location', "%s/game" % self.base_url))
 
     def game_room_raise(self, idnum=None, amount=None, **kwargs):
-        pass
+        """Function called when the player places a bet or raises a bet."""
+
+        self.users[idnum][2].raise_bet(int(amount))
+        return self.game_room_redirect(idnum=idnum)
 
     def game_room_call(self, idnum=None, amount=None, **kwargs):
-        pass
+        """Function called when the player calls."""
 
-    def game_room_fold(self, idnum=None, amount=None, **kwargs):
-        pass
+        self.users[idnum][2].call(int(amount))
+        return self.game_room_redirect(idnum=idnum)
+
+    def game_room_fold(self, idnum=None, **kwargs):
+        """Function called when the player folds."""
+
+        self.users[idnum][2].fold()
+        return self.game_room_redirect(idnum=idnum)
 
 
 if __name__ == '__main__':
