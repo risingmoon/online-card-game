@@ -83,7 +83,6 @@ class GameRoomServer(object):
 
         urls = [
             (r'^$', self.redirect_from_root),
-            (r'^login$', self.login),
             (r'^lobby$', self.lobby),
             (r'^lobby/(\d+)$', self.lobby),
             (r'^lobby/join$', self.lobby_join),
@@ -131,21 +130,7 @@ class GameRoomServer(object):
         if self.in_game:
             return self.game_room_redirect()
         else:
-            return self.login()
-
-    def login(self, **kwargs):
-        page = """
-        <center>
-        <h1>Lobby</h1>
-        <div>
-        <form method="POST" action="/lobby/join">
-            <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" value="Join" />
-        </form>
-        </div>
-        </center>
-        """
-        return (page, None)
+            return self.lobby_redirect()
 
     def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
