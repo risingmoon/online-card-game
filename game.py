@@ -29,42 +29,46 @@ class Game:
 
     def initialize_game(self):
         """When called, we allocate to each player a beginning number of
-        points, choose a dealer, and set the big and small blind
-        accordingly.
+        points, initialize the first round, and then begin the first
+        betting cycle.
         """
         for player in self.players_list:
             player.points = self.initial_points
 
         #For now the first player to join the lobby is made the dealer.
-        self._set_dealer_and_blinds(dealer=0)
+        self._initialize_round(dealer=0)
 
     def update_game(self, bet=0):
         """Function called when a player concludes their turn. Expects a
         value that is the amount of the bet just placed (if any) so that
-        that amount can be added to the pot.
+        that amount can be added to the pot. This function also decides
+        when a betting cycle is over and when a round is won.
         """
         if bet:
             self.pot += bet
             self.last_raise = self.current_player
 
-        self._next_player_turn()
-
         #If all players but one have folded.
         if self._poll_active_players() == 1:
-            self.end_round()
+            self.end_hand()
+
+        self._next_player_turn()
 
         #If we have made it around the table to the last player who raised,
         #and no additional raises have been made.
         if self.last_raise is self.current_player:
-            pass
+            self.end_round()
 
-    def _set_dealer_and_blinds(self, dealer=None):
+    def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
         the roles of small blind and big blind. If the "dealer" argument
         is passed in, the game forces that player to be the dealer.
         Otherwise, it looks at its internal self.dealer and assigns to the
-        NEXT player the role of dealer.
+        NEXT player the role of dealer. The small blind and big blind are
+        made to place their bets.
         """
+        #Determine who the dealer, small blind, and big blind will be for
+        #the next round.
         if dealer:
             self.dealer = dealer
         else:
@@ -77,13 +81,36 @@ class Game:
         big_blind = self.small_blind + 1
         big_blind %= self.players_size
 
-        self.players_list[self.dealer].set_attributes(dealer=True)
-        self.players_list[small_blind].set_attributes(
-            small_blind=True, turn=True)
-        self.players_list[big_blind].set_attributes(big_blind=True)
+        #Clear all the attributes on players left over from the last round.
+        for player in self.players_list:
+            player.clear_round_attributes()
+
+        #Assign the proper attributes for the coming round to the players
+        #that we determined earlier.
+        self.players_list[self.dealer].dealer = True
+
+        self.players_list[small_blind].small_blind = True
+        self.players_list[small_blind].turn = True
+
+        self.players_list[big_blind].big_blind = True
 
         #The small blind is to the left of the dealer, so their turn is first.
         self.current_player = small_blind
+
+        #Force the small blind and big blind to place their bets.
+        self.players_list[small_blind].call(self.small_blind_points)
+        self.players_list[big_blind].call(self.big_blind_points)
+
+        #Deal two cards to each player.
+        #TBD
+
+    #This function has been wrapped into _initialize_round
+    # def blinds(self):
+    #     small_blind = self.players_list[self.mod(self.dealer, 1)]
+    #     big_blind = self.players_list[self.mod(self.dealer, 2)]
+    #     self.last_raised = self.mod(self.dealer, 3)
+    #     small_blind.call(self.small_blind_points)
+    #     big_blind.call(self.big_blind_points)
 
     def _next_player_turn(self):
         """Give the next player their turn. Find the next player from
@@ -123,13 +150,6 @@ class Game:
 
     def mod(self, player, number):
         return (player + number) % self.players_size
-
-    def blinds(self):
-        small_blind = self.players_list[self.mod(self.dealer, 1)]
-        big_blind = self.players_list[self.mod(self.dealer, 2)]
-        self.last_raised = self.mod(self.dealer, 3)
-        small_blind.call(self.small_blind_points)
-        big_blind.call(self.big_blind_points)
 
     def active(self, player):
         return self.player.active

@@ -4,27 +4,31 @@ class Player:
 
     def __init__(self, name, points=0):
         #Features that the player knows about itself and tells the game.
+        #Except for bet, these attributes persist across rounds.
         self.name = name
         self.points = points
-        self.hand = None
         self.bet = 0
         self.active = True
 
-        #Features that the game assigns to the player.
+        #Features that the game assigns to the player. These (along with)
+        #the bet, above) are set at the beginning of each round.
+        self.hand = None
         self.turn = False
         self.big_blind = False
         self.small_blind = False
         self.dealer = False
 
-    def set_attributes(self,
-        turn=False, big_blind=False, small_blind=False, dealer=False):
-        """This function allows the game to easily set or unset any
-        combination of the attributes it might assign to the player.
+    def clear_round_attributes(self):
+        """This function allows the game to easily clear attributes on
+        the player that are specific to a certain round, so that the
+        player can be made ready for the next round.
         """
-        self.turn = turn
-        self.big_blind = big_blind
-        self.small_blind = small_blind
-        self.dealer = dealer
+        self.bet = 0
+        self.hand = None
+        self.turn = False
+        self.big_blind = False
+        self.small_blind = False
+        self.dealer = False
 
     def call(self, points):
         self.points -= points
