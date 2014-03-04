@@ -26,6 +26,21 @@ class GameTest(unittest.TestCase):
             self.assertEquals(NAMES[index],
                               self.game.players_list[index].name)
 
+    def test_mod(self):
+        self.setUp_players()
+        for i in range(len(NAMES)):
+            for j in range(1, 4):
+                players = i
+                self.assertEquals(
+                    self.game.mod(players, j),
+                    (i + j) % self.game.players_size)
+
+    def test_run_round(self):
+        self.setUp_players()
+        self.game.last_raise = 1
+        self.game.players_list[3].active = False
+        self.game.run_round()
+
 
 if __name__ == '__main__':
     unittest.main()

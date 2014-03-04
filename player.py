@@ -6,7 +6,7 @@ class Player:
         self.name = name
         self.points = points
         self.hand = None
-        self.active = False
+        self.active = True
         self.bet = 0
 
     def call(self, points):

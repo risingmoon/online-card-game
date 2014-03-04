@@ -29,5 +29,6 @@ class PlayerTest(unittest.TestCase):
         self.assertEqual(self.player.hand, None)
         self.assertEqual(self.player.points, 25)
 
+
 if __name__ == '__main__':
     unittest.main()
