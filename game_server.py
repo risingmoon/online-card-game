@@ -263,5 +263,5 @@ class GameRoomServer(object):
 if __name__ == '__main__':
     game = GameRoomServer()
     patch_all()
-    server = WSGIServer(('', 10101), game)
+    server = WSGIServer(('', 8080), game)
     server.serve_forever()
