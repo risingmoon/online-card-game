@@ -124,7 +124,7 @@ class GameRoomServer(object):
         </form>
         <form method="POST" action="/lobby/vote">
             <input type="submit" value="Change Vote" />
-            <input type="hidden" value="%s" />
+            <input type="hidden" name="idnum" value="%s" />
         </form>
     </div>""" % (self.users[idnum][0], idnum, idnum)
 
@@ -201,7 +201,7 @@ class GameRoomServer(object):
             idnum = int(idnum)
 
         self.users[idnum][1] = \
-            'Yes' if self.users[idnum][1] == 'No' else 'No'
+            'Yes' if (self.users[idnum][1] == 'No') else 'No'
 
         return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
 
