@@ -13,6 +13,7 @@ class Game:
         self.current_bet = 0
         self.dealer = 0
         self.last_raise = 0
+        self.current_player = 0
         self.small_blind_points = 5
         self.big_blind_points = 10
         self.initial_points = 100
@@ -36,8 +37,7 @@ class Game:
             player.points = self.initial_points
 
         #For now the first player to join the lobby is made the dealer.
-        self.dealer = 0
-        self.set_dealer_and_blinds(dealer=self.dealer)
+        self._set_dealer_and_blinds(dealer=0)
 
     def _set_dealer_and_blinds(self, dealer=None):
         """Assign one player the role of dealer and the next two players
@@ -62,6 +62,20 @@ class Game:
         self.players_list[small_blind].set_attributes(
             small_blind=True, turn=True)
         self.players_list[big_blind].set_attributes(big_blind=True)
+
+        #The small blind is to the left of the dealer, so their turn is first.
+        self.current_player = small_blind
+
+    def _next_player_turn(self):
+        """Give the next player their turn. Find the next player from
+        the current player who is active (hasn't folded) and set their
+        "turn" attribute. Unset the "turn" attribute of the player who
+        just had their turn.
+        """
+        self.players_list[self.current_player].turn = False
+        self.current_player += 1
+        self.current_player %= self.players_size
+        self.players_list[self.current_player].turn = True
 
     def end_round(self):
         for index in self.players_size:
