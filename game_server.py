@@ -1,6 +1,7 @@
 from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
 from urlparse import parse_qs
+from game import Game
 import re
 
 
@@ -11,7 +12,7 @@ class GameRoomServer(object):
 
     def __init__(self):
         """Initialize the game room with a game object."""
-        #self.game = game_placeholder.Game()
+        self.game = Game()
 
         #Each user can be tied with a Player object in the game.
         self.users = {}
@@ -90,6 +91,9 @@ class GameRoomServer(object):
             (r'^lobby/edit$', self.lobby_edit),
             (r'^game$', self.game_room),
             (r'^game/(\d+)$', self.game_room),
+            (r'^game/call$', self.game_room_call),
+            (r'^game/raise$', self.game_room_raise),
+            (r'^game/fold$', self.game_room_fold),
         ]
 
         matchpath = path.lstrip('/')
@@ -247,7 +251,7 @@ class GameRoomServer(object):
                 break
 
         if votecheck:
-            self.in_game = True
+            self._initialize_game_room()
             return self.game_room_redirect(idnum=idnum)
         else:
             return self.lobby_redirect(idnum=idnum)
@@ -260,6 +264,13 @@ class GameRoomServer(object):
         self.users[idnum][0] = username
         return self.lobby_redirect(idnum=idnum)
 
+    def _initialize_game_room(self):
+        """When the game starts, this function is called to set up the game
+        and all players in the game.
+        """
+        self.in_game = True
+
+
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>", None
 
@@ -269,6 +280,15 @@ class GameRoomServer(object):
             return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
         else:
             return ('', ('Location', "%s/game" % self.base_url))
+
+    def game_room_raise(self, idnum=None, amount=None, **kwargs):
+        pass
+
+    def game_room_call(self, idnum=None, amount=None, **kwargs):
+        pass
+
+    def game_room_fold(self, idnum=None, amount=None, **kwargs):
+        pass
 
 
 if __name__ == '__main__':
