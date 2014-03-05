@@ -1,4 +1,5 @@
 from player import Player
+from deck import Deck
 
 
 class Game:
@@ -18,6 +19,9 @@ class Game:
         self.small_blind_points = 5
         self.big_blind_points = 10
         self.initial_points = 100
+
+        self.deck = Deck()
+        self.community = []
 
     #The game's API consists entirely of the next 4 (possibly 5) methods:
     #add_player, MAYBE remove_player, initialize_game, update_game, and
