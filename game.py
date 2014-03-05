@@ -78,13 +78,16 @@ class Game:
                         self._end_round(player=player)
                         return
         else:
+            if self.players_list[self.current_player].bet < self.players_list[
+                    self._get_previous_player(self.current_player)].bet:
+                raise ValueError(
+                    "Your bet must at least equal the last player's.")
+
             self.pot += bet
+
             if self.players_list[self.current_player].bet > self.players_list[
-                self._get_previous_player(self.current_player)].bet:
+                    self._get_previous_player(self.current_player)].bet:
                 self.last_raise = self.current_player
-            # elif self.players_list[self.current_player].bet > \
-            #         self.players_list[self.current_player - 1].bet:
-            #     raise Exception("Your bet must at least equal the last player's.")
 
         self._next_player_turn()
 
@@ -252,16 +255,54 @@ class Game:
             #determined.
             self._initialize_round()
 
-    def _get_next_player(self, index, step=1):
-        """Get the player to the left of the player at the index passed
-        in. The index passed in must be a valid index.
+    def _get_next_active_player(self, index):
+        """Get the next active player clockwise around the table from
+        the player at the index passed in. The index passed in must be a
+        valid index.
         """
+        count = 0
+        index = self._get_next_player(index)
+        while not self.players_list[index].active:
+            index = self._get_next_player(index)
+            count += 1
+            if count > self.players_size:
+                raise BaseException(
+                    "_get_next_active_player is looping infinitely.")
+
+    def _get_next_player(self, index, step=1):
+        """Get the player step positions to the left of the player at
+        the index passed in. The index passed in must be a valid index.
+        """
+        if index not in range(self.players_size):
+            raise IndexError(
+                "Index %s passed to _get_next_player is out of range." %
+                index)
+
         return (index + step) % self.players_size
 
-    def _get_previous_player(self, index, step=1):
-        """Get the player to the right of the player at the index passed
-        in. The index passed in must be a valid index.
+    def _get_previous_active_player(self, index):
+        """Get the next active player counterclockwise around the table
+        from the player at the index passed in. The index passed in must
+        be a valid index.
         """
+        count = 0
+        index = self._get_previous_player(index)
+        while not self.players_list[index].active:
+            index = self._get_previous_player(index)
+            count += 1
+            if count > self.players_size:
+                raise BaseException(
+                    "_get_next_active_player is looping infinitely.")
+
+    def _get_previous_player(self, index, step=1):
+        """Get the player step positions to the right of the player at
+        the index passed in. The index passed in must be a valid index.
+        """
+        if index not in range(self.players_size):
+            raise IndexError(
+                "Index %s passed to _get_previous_player is out of range."
+                % index)
+
         index -= step
         while index < 0:
             index += self.players_size
