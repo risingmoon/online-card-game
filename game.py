@@ -5,18 +5,23 @@ class Game:
 
     def __init__(self):
         self.players_size = 0
-        #self.round_size = 0
         self.players_list = []
-        #self.round_list = []
-        self.pot = 0
-        self.min_bet = 0
-        self.current_bet = 0
         self.dealer = 0
         self.last_raise = 0
         self.current_player = 0
+
+        self.pot = 0
+
+        self.current_cycle = 0
+
+        self.min_bet = 0
         self.small_blind_points = 5
         self.big_blind_points = 10
         self.initial_points = 100
+
+        #self.round_size = 0
+        #self.round_list = []
+        #self.current_bet = 0
 
     #The game's API consists entirely of these 3 (possibly 4) methods:
     #add_player, MAYBE remove_player, initialize_game, and update_game.
@@ -127,8 +132,11 @@ class Game:
         self.players_list[first_turn].turn = True
 
         #Force the small blind and big blind to place their bets.
-        self.players_list[small_blind].call(self.small_blind_points)
-        self.players_list[big_blind].call(self.big_blind_points)
+        self.pot = 0
+        self.pot += self.players_list[small_blind].call(
+            self.small_blind_points)
+        self.pot += self.players_list[big_blind].call(
+            self.big_blind_points)
 
         #Deal two cards to each player.
         #TBD
@@ -169,19 +177,39 @@ class Game:
 
         return active_players
 
-    def run_round(self):
-        player_index = (self.last_raise + 1) % self.players_size
-        while player_index is not self.last_raise:
-            if self.players_list[player_index].active:
-                print self.players_list[player_index].name
-            player_index += 1
-            player_index = player_index % self.players_size
+    def _end_cycle(self):
+        """Called when the current betting cycle has concluded. This
+        happens when the player whose turn it would currently be was the
+        last player to raise."""
+        pass
 
-    def mod(self, player, number):
-        return (player + number) % self.players_size
+    def _end_round(self, player=None):
+        """Called when the current round ends - either when all players
+        but one fold, or when the last betting cycle is completed. When
+        an argument is passed, the round is assumed to have ended because
+        all players but the one with the index passed have folded.
+        """
+        if player is not None:
+            self.players_list[player].points += self.pot
+            self._initialize_round()
+        else:
+            #The showdown happens here; hands are compared & a winner is
+            #determined.
+            pass
 
-    def active(self, player):
-        return self.player.active
+    # def run_round(self):
+    #     player_index = (self.last_raise + 1) % self.players_size
+    #     while player_index is not self.last_raise:
+    #         if self.players_list[player_index].active:
+    #             print self.players_list[player_index].name
+    #         player_index += 1
+    #         player_index = player_index % self.players_size
+
+    # def mod(self, player, number):
+    #     return (player + number) % self.players_size
+
+    # def active(self, player):
+    #     return self.player.active
 
     # def turn(self, player):
 
