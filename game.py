@@ -70,31 +70,32 @@ class Game:
         #made by the player & prompt them to redo if their actions were
         #invalid.
 
-        if fold:
-            #If all players but one have folded.
-            if self._poll_active_players() == 1:
-                for player in range(self.players_size):
-                    if self.players_list[player].active:
-                        self._end_round(player=player)
-                        return
+        #If the player just folded and only one active player remains.
+        if fold and self._poll_active_players() == 1:
+            self._end_round(
+                self._get_next_active_player(self.current_player))
+
+        #Otherwise, the player just checked or placed a bet.
         else:
             if self.players_list[self.current_player].bet < self.players_list[
-                    self._get_previous_player(self.current_player)].bet:
+                    self._get_previous_active_player(self.current_player)].bet:
                 raise ValueError(
-                    "Your bet must at least equal the last player's.")
+                    "Your bet must at least equal the previous player's.")
 
             self.pot += bet
 
             if self.players_list[self.current_player].bet > self.players_list[
-                    self._get_previous_player(self.current_player)].bet:
+                    self._get_previous_active_player(self.current_player)].bet:
                 self.last_raise = self.current_player
 
-        self._next_player_turn()
+            self.current_player = \
+                self._get_next_active_player(self.current_player)
 
-        #If we have made it around the table to the last player who raised,
-        #and no additional raises have been made, end this betting cycle.
-        if self.last_raise == self.current_player:
-            self._end_cycle()
+            #If we have made it around the table to the last player who
+            #raised, and no additional raises have been made, end this
+            #betting cycle.
+            if self.last_raise == self.current_player:
+                self._end_cycle()
 
     def poll_game(self, player=None):
         """Return a dictionary containing useful information about the
@@ -193,25 +194,6 @@ class Game:
 
         self.current_cycle = 0
 
-    def _next_player_turn(self):
-        """Give the next player their turn. Find the next player from
-        the current player who is active (hasn't folded) and assign their
-        index to self.current_player.
-        """
-        self.current_player = self._get_next_player(self.current_player)
-        while(not self.players_list[self.current_player].active):
-            self.current_player = \
-                self._get_next_player(self.current_player)
-
-    def _poll_active_players(self):
-        """Find out how many players are active (haven't folded)."""
-        active_players = 0
-        for player in self.players_list:
-            if player.active:
-                active_players += 1
-
-        return active_players
-
     def _end_cycle(self):
         """Called when the current betting cycle has concluded. This
         happens when the player whose turn it would currently be was the
@@ -243,6 +225,15 @@ class Game:
             #determined.
             self._initialize_round()
 
+    def _poll_active_players(self):
+        """Find out how many players are active (haven't folded)."""
+        active_players = 0
+        for player in self.players_list:
+            if player.active:
+                active_players += 1
+
+        return active_players
+
     def _get_next_active_player(self, index):
         """Get the next active player clockwise around the table from
         the player at the index passed in. The index passed in must be a
@@ -257,17 +248,6 @@ class Game:
                 raise BaseException(
                     "_get_next_active_player is looping infinitely.")
 
-    def _get_next_player(self, index, step=1):
-        """Get the player step positions to the left of the player at
-        the index passed in. The index passed in must be a valid index.
-        """
-        if index not in range(self.players_size):
-            raise IndexError(
-                "Index %s passed to _get_next_player is out of range." %
-                index)
-
-        return (index + step) % self.players_size
-
     def _get_previous_active_player(self, index):
         """Get the next active player counterclockwise around the table
         from the player at the index passed in. The index passed in must
@@ -281,6 +261,17 @@ class Game:
             if count > self.players_size:
                 raise BaseException(
                     "_get_previous_active_player is looping infinitely.")
+
+    def _get_next_player(self, index, step=1):
+        """Get the player step positions to the left of the player at
+        the index passed in. The index passed in must be a valid index.
+        """
+        if index not in range(self.players_size):
+            raise IndexError(
+                "Index %s passed to _get_next_player is out of range." %
+                index)
+
+        return (index + step) % self.players_size
 
     def _get_previous_player(self, index, step=1):
         """Get the player step positions to the right of the player at
