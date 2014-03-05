@@ -198,18 +198,21 @@ class Game:
         last player to raise. Initializes the next betting cycle or ends
         the round.
         """
-        if self.current_cycle == 0:
-            #Deal out three cards (the flop)
-            self.current_cycle += 1
-        elif self.current_cycle == 1:
-            #Deal out one card (the turn)
-            self.current_cycle += 1
-        elif self.current_cycle == 2:
-            #Deal out one card (the river)
-            self.current_cycle += 1
-        else:
-            #This was the last betting cycle
+        if self.current_cycle >= 3:
+            #If this was the last betting cycle.
             self._end_round()
+
+        else:
+            if self.current_cycle == 0:
+                #Deal out three cards (the flop)
+                pass
+            else:
+                #Deal out one card (the turn or the river)
+                pass
+
+            self.current_cycle += 1
+            self.current_player = \
+                self._get_next_active_player(self.dealer)
 
     def _end_round(self, winner=None):
         """Called when the current round ends - either when all players
