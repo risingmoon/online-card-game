@@ -26,6 +26,99 @@ class GameTest(unittest.TestCase):
                               self.game.players_list[index].name)
 
 
+class TestGetActivePlayerFunctions(unittest.TestCase):
+    """Test the _get_next_active_player, _get_previous_active_player, and
+    _poll_active_players functions.
+    """
+    def setUp(self):
+        self.game = Game()
+        for name in ['Jordan', 'Matt', 'Justin', 'Cris']:
+            self.game.add_player(name)
+
+    def test_poll_all_players_active(self):
+        """Count the active players when all players are active."""
+        self.assertEqual(
+            self.game._poll_active_players(), self.game.players_size)
+
+    def test_poll_some_players_active(self):
+        """Count the active players when some players are active, and not
+        necessarily all in a row.
+        """
+        for player in self.game.players_list[::2]:
+            player.active = False
+
+        self.assertEqual(
+            self.game._poll_active_players(), self.game.players_size / 2)
+
+    def test_poll_no_players_active(self):
+        """Count the active players when no players are active."""
+        for player in self.game.players_list:
+            player.active = False
+
+        self.assertEqual(
+            self.game._poll_active_players(), 0)
+
+    def test_get_previous_no_active_players(self):
+        """Attempt to the find the previous active player when no players
+        are active.
+        """
+        for player in self.game.players_list:
+            player.active = False
+
+        self.assertRaises(
+            BaseException, self.game._get_previous_active_player, 0)
+
+    def test_get_next_no_active_players(self):
+        """Attempt to find the next active player when no players are
+        active.
+        """
+        for player in self.game.players_list:
+            player.active = False
+
+        self.assertRaises(
+            BaseException, self.game._get_previous_active_player, 0)
+
+    def test_get_previous_within_list(self):
+        """Attempt to find the previous active player when that player
+        comes before the beginning of the list.
+        """
+        for player in self.game.players_list[::2]:
+            player.active = False
+
+        self.assertEqual(
+            self.game._get_previous_active_player(2), 0)
+
+    def test_get_next_within_list(self):
+        """Attempt to find the next active player when that player comes
+        before the end of the list.
+        """
+        for player in self.game.players_list[::2]:
+            player.active = False
+
+        self.assertEqual(
+            self.game._get_next_active_player(0), 2)
+
+    def test_get_previous_past_beginning(self):
+        """Attempt to find the previous active player when that operation
+        will require us to loop back to the end of the list.
+        """
+        for player in self.game.players_list[::2]:
+            player.active = False
+
+        self.assertEqual(
+            self.game._get_previous_active_player(0), 2)
+
+    def test_get_next_past_end(self):
+        """Attempt to find the next active player when that operation will
+        require us to loop back to the top of the list.
+        """
+        for player in self.game.players_list[::2]:
+            player.active = False
+
+        self.assertEqual(
+            self.game._get_next_active_player(2), 0)
+
+
 class TestPlayerGetFunctions(unittest.TestCase):
     """Test the _get_next_player and _get_previous_player funcions."""
     def setUp(self):

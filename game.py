@@ -2,7 +2,7 @@ from player import Player
 
 
 class Game:
-
+    """A game of Texas Hold'em."""
     def __init__(self):
         self.players_size = 0
         self.players_list = []
@@ -19,11 +19,7 @@ class Game:
         self.big_blind_points = 10
         self.initial_points = 100
 
-        #self.round_size = 0
-        #self.round_list = []
-        #self.current_bet = 0
-
-    #The game's API consists entirely of these 4 (possibly 5) methods:
+    #The game's API consists entirely of the next 4 (possibly 5) methods:
     #add_player, MAYBE remove_player, initialize_game, update_game, and
     #poll_game.
     #add_player is called to put players into the game before starting it.
