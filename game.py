@@ -193,18 +193,6 @@ class Game:
 
         self.current_cycle = 0
 
-    #These functions have been wrapped into _initialize_round.
-    # def blinds(self):
-    #     small_blind = self.players_list[self.mod(self.dealer, 1)]
-    #     big_blind = self.players_list[self.mod(self.dealer, 2)]
-    #     self.last_raised = self.mod(self.dealer, 3)
-    #     small_blind.call(self.small_blind_points)
-    #     big_blind.call(self.big_blind_points)
-
-    # def end_round(self):
-    #     for index in self.players_size:
-    #         self.players_list[index].active = True
-
     def _next_player_turn(self):
         """Give the next player their turn. Find the next player from
         the current player who is active (hasn't folded) and assign their
@@ -292,7 +280,7 @@ class Game:
             count += 1
             if count > self.players_size:
                 raise BaseException(
-                    "_get_next_active_player is looping infinitely.")
+                    "_get_previous_active_player is looping infinitely.")
 
     def _get_previous_player(self, index, step=1):
         """Get the player step positions to the right of the player at
@@ -307,46 +295,6 @@ class Game:
         while index < 0:
             index += self.players_size
         return index
-
-    #Broke this down into two functions that can get the next or previous
-    #player from any given index.
-    # def mod(self, player, number):
-    #     return (player + number) % self.players_size
-
-    # def run_round(self):
-    #     player_index = (self.last_raise + 1) % self.players_size
-    #     while player_index is not self.last_raise:
-    #         if self.players_list[player_index].active:
-    #             print self.players_list[player_index].name
-    #         player_index += 1
-    #         player_index = player_index % self.players_size
-
-    # def active(self, player):
-    #     return self.player.active
-
-    # def turn(self, player):
-
-    #     if cmd == 'CALL':
-    #         player.call(self.current_bet)
-    #     elif cmd == 'RAISE':
-    #         player.call(self.current_bet)
-    #         self.current_bet += player.raise_bet(5)
-    #     elif cmd == 'FOLD':
-    #         self.pot += player.bet
-    #         player.fold()
-    #         player.active = False
-    #     else:
-    #         raise KeyError("WRONG CMD")
-
-    def bet_cycle(self):
-        pass
-
-    def run_game(self):
-        """
-        1.Randomize dealer
-        2.Rounds
-
-        """
 
 
 if __name__ == '__main__':
