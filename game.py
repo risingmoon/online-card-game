@@ -156,13 +156,12 @@ class Game:
         NEXT player the role of dealer. The small blind and big blind are
         made to place their bets.
         """
-        #Determine who the dealer, small blind, and big blind will be for
-        #the next round.
-        if dealer:
+        #Determine who the dealer, small blind, big blind, and first turn
+        #will be for the next round.
+        if dealer is not None:
             self.dealer = dealer
         else:
-            self.dealer += 1
-            self.dealer %= self.players_size
+            self.dealer = self._get_next_player(self.dealer)
 
         small_blind = self._get_next_player(self.dealer)
 
@@ -171,10 +170,11 @@ class Game:
 
         self.current_player = self._get_next_player(big_blind)
 
-        #Deal two cards to each player and reset their bets from the
-        #last round.
+        #Deal two cards to each player and reset their bets and active
+        #status from the last round.
         for player in self.players_list:
             player.bet = 0
+            player.active = True
             player.hand = None
             #Deal two cards here instead; to do
 
@@ -186,7 +186,9 @@ class Game:
         self.pot += self.players_list[big_blind].call(
             self.big_blind_points)
         #Will eventually need to check that these players have enough
-        #money to place the bet.
+        #points to place the bet.
+
+        self.current_cycle = 0
 
     #These functions have been wrapped into _initialize_round.
     # def blinds(self):
@@ -202,18 +204,13 @@ class Game:
 
     def _next_player_turn(self):
         """Give the next player their turn. Find the next player from
-        the current player who is active (hasn't folded) and set their
-        "turn" attribute. Unset the "turn" attribute of the player who
-        just had their turn.
+        the current player who is active (hasn't folded) and assign their
+        index to self.current_player.
         """
-        self.players_list[self.current_player].turn = False
-        self.current_player += 1
-        self.current_player %= self.players_size
+        self.current_player = self._get_next_player(self.current_player)
         while(not self.players_list[self.current_player].active):
-            self.current_player += 1
-            self.current_player %= self.players_size
-
-        self.players_list[self.current_player].turn = True
+            self.current_player = \
+                self._get_next_player(self.current_player)
 
     def _poll_active_players(self):
         """Find out how many players are active (haven't folded)."""
