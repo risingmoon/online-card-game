@@ -76,7 +76,7 @@ class Game:
                 self._get_next_active_player(self.current_player))
 
         #Otherwise, the player just checked or placed a bet.
-        #Need to check for when the player is able to check (as opposed)
+        #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
         else:
             if self.players_list[self.current_player].bet < self.players_list[
