@@ -286,6 +286,13 @@ class GameRoomServer(object):
             return ('', ('Location', "%s/game" % self.base_url))
 
 
+game = GameRoomServer()
+
+
+def game_wrapper_app(environ, start_response):
+    return game(environ, start_response)
+
+
 if __name__ == '__main__':
     game = GameRoomServer()
     patch_all()
