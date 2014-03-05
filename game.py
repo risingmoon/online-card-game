@@ -23,14 +23,18 @@ class Game:
         #self.round_list = []
         #self.current_bet = 0
 
-    #The game's API consists entirely of these 3 (possibly 4) methods:
-    #add_player, MAYBE remove_player, initialize_game, and update_game.
+    #The game's API consists entirely of these 4 (possibly 5) methods:
+    #add_player, MAYBE remove_player, initialize_game, update_game, and
+    #poll_game.
     #add_player is called to put players into the game before starting it.
     #remove_player allows a player to be dropped from the game.
     #initialize_game is called after all players have been added and takes
     #care of everything related to starting the game.
     #update_game is called every time a player ends their turn to update
     #the internal state of the game to reflect that player's actions.
+    #poll_game is called by the server's HTML templater for the game room
+    #in order to get out the information it needs to deliver each player
+    #a version of the room tailored to them.
 
     def add_player(self, name):
         """Create a new Player object and add it to the game. Return a
@@ -88,6 +92,45 @@ class Game:
         #and no additional raises have been made, end this betting cycle.
         if self.last_raise == self.current_player:
             self._end_cycle()
+
+    def poll_game(self, player=None):
+        """Return a dictionary containing useful information about the
+        state of the game. If a player index is passed in, the dictionary
+        includes information about that specific player, which makes this
+        function a one-stop shop for users to get information specific to
+        the game from their perspective.
+        """
+        info = {
+            'dealer': self.dealer,
+            'small_blind': self._get_next_player(self.dealer),
+            'big_blind': self._get_next_player(self.dealer, 2),
+            'pot': self.pot,
+        }
+
+        if player is not None:
+            players = []
+            #Populate this list with dicts containing information we need
+            #to know about other players (their name, bet, and status).
+            #Order the list starting from the current player's left so
+            #that player data is displayed in an order that makes sense
+            #on their version of the page.
+            info.update({
+                'turn': True if player == self.current_player else False,
+                'dealer': True if player == info['dealer'] else False,
+                'small_blind': True if player == info['small_blind'] else False,
+                'big_blind': True if player == info['big_blind'] else False,
+                'hand': self.players_list[player].hand,
+                'points': self.players_list[player].points,
+                'bet': self.players_list[player].bet,
+                'active': self.players_list[player].active,
+                'name': self.players_list[player].name,
+                'players': players,
+            })
+        else:
+            #If no player was specified, then a spectator is making this
+            #request, and we should return a little bit of information
+            #about all players. This is low-priority.
+            pass
 
     def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
@@ -208,6 +251,23 @@ class Game:
             #determined.
             self._initialize_round()
 
+    def _get_next_player(self, index, step=1):
+        """Get the player to the left of the player at the index passed
+        in. The index passed in must be a valid index.
+        """
+        return (index + step) % self.players_size
+
+    def _get_previous_player(self, index, step=1):
+        """Get the player to the right of the player at the index passed
+        in. The index passed in must be a valid index.
+        """
+        return index - 1
+
+    #Broke this down into two functions that can get the next or previous
+    #player from any given index.
+    # def mod(self, player, number):
+    #     return (player + number) % self.players_size
+
     # def run_round(self):
     #     player_index = (self.last_raise + 1) % self.players_size
     #     while player_index is not self.last_raise:
@@ -215,9 +275,6 @@ class Game:
     #             print self.players_list[player_index].name
     #         player_index += 1
     #         player_index = player_index % self.players_size
-
-    # def mod(self, player, number):
-    #     return (player + number) % self.players_size
 
     # def active(self, player):
     #     return self.player.active
