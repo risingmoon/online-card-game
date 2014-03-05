@@ -18,7 +18,10 @@ class Deck(object):
         random.shuffle(self.cards)
 
     def get_card(self):
-        return self.cards.pop()
+        try:
+            return self.cards.pop()
+        except IndexError:
+            raise IndexError('Deck is empty. This should never happen.')
 
     def __str__(self):
         s = ''
