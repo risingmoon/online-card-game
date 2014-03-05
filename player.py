@@ -10,8 +10,8 @@ class Player:
         self.bet = 0
         self.active = True
 
-        #Features that the game assigns to the player. These (along with)
-        #the bet, above) are set at the beginning of each round.
+        #Features that the game assigns to the player. These (along with
+        #self.bet, above) are set at the beginning of each round.
         self.hand = None
         self.turn = False
         self.big_blind = False

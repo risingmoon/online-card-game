@@ -58,23 +58,31 @@ class Game:
         """
 
         #EVENTUALLY this function will need to validate the actions just
-        #made by the player.
+        #made by the player & prompt them to redo if their actions were
+        #invalid.
 
         if fold:
             #If all players but one have folded.
             if self._poll_active_players() == 1:
-                self.end_round
-
-        if bet:
+                for player in range(self.players_size):
+                    if self.players_list[player].active:
+                        self._end_round(player=player)
+                        return
+        else:
             self.pot += bet
-            self.last_raise = self.current_player
+            if self.players_list[self.current_player].bet > \
+                    self.players_list[self.current_player - 1].bet:
+                self.last_raise = self.current_player
+            # elif self.players_list[self.current_player].bet > \
+            #         self.players_list[self.current_player - 1].bet:
+            #     raise Exception("Your bet must at least equal the last player's.")
 
         self._next_player_turn()
 
         #If we have made it around the table to the last player who raised,
-        #and no additional raises have been made.
-        if self.last_raise is self.current_player:
-            self.end_round()
+        #and no additional raises have been made, end this betting cycle.
+        if self.last_raise == self.current_player:
+            self._end_cycle()
 
     def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
