@@ -4,7 +4,7 @@ information as a dictionary, and saves the dictionary to a file using pickle.
 {unique int key: (int rank, string name of hand)}
 '''
 
-import pickle
+from pickle import dump
 
 
 lines = open('rank_table.txt', 'r').readlines()
@@ -34,9 +34,9 @@ for line in lines:
 
 
 with open('rank_table.pickle', 'wb') as outfile:
-    pickle.dump(main_dict, outfile)
+    dump(main_dict, outfile)
 outfile.close()
 
 with open('flush_rank_table.pickle', 'wb') as outfile:
-    pickle.dump(flush_dict, outfile)
+    dump(flush_dict, outfile)
 outfile.close()

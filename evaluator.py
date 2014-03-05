@@ -1,5 +1,5 @@
 from itertools import combinations
-import pickle
+from pickle import load
 
 
 class Evaluator(object):
@@ -11,10 +11,10 @@ class Evaluator(object):
         of the corresponding hand's rank and the name of that hand.
         '''
         with open('rank_table.pickle', 'rb') as infile:
-            self.rank_table = pickle.load(infile)
+            self.rank_table = load(infile)
         infile.close()
         with open('flush_rank_table.pickle', 'rb') as infile:
-            self.flush_rank_table = pickle.load(infile)
+            self.flush_rank_table = load(infile)
         infile.close()
 
     def get_best(self, seven_cards):
