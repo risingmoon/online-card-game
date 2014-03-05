@@ -76,6 +76,8 @@ class Game:
                 self._get_next_active_player(self.current_player))
 
         #Otherwise, the player just checked or placed a bet.
+        #Need to check for when the player is able to check (as opposed)
+        #to when they're required to place a bet).
         else:
             if self.players_list[self.current_player].bet < self.players_list[
                     self._get_previous_active_player(self.current_player)].bet:
@@ -197,7 +199,9 @@ class Game:
     def _end_cycle(self):
         """Called when the current betting cycle has concluded. This
         happens when the player whose turn it would currently be was the
-        last player to raise."""
+        last player to raise. Initializes the next betting cycle or ends
+        the round.
+        """
         if self.current_cycle == 0:
             #Deal out three cards (the flop)
             self.current_cycle += 1
@@ -211,19 +215,21 @@ class Game:
             #This was the last betting cycle
             self._end_round()
 
-    def _end_round(self, player=None):
+    def _end_round(self, winner=None):
         """Called when the current round ends - either when all players
         but one fold, or when the last betting cycle is completed. When
         an argument is passed, the round is assumed to have ended because
         all players but the one with the index passed have folded.
+        Determines a winner in the showdown (if applicable) and gives the
+        pot to the winner.
         """
-        if player is not None:
-            self.players_list[player].points += self.pot
-            self._initialize_round()
-        else:
+        if winner is None:
             #The showdown happens here; hands are compared & a winner is
             #determined.
-            self._initialize_round()
+            pass
+
+        self.players_list[winner].points += self.pot
+        self._initialize_round()
 
     def _poll_active_players(self):
         """Find out how many players are active (haven't folded)."""
