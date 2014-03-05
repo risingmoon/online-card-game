@@ -250,6 +250,8 @@ class Game:
                 raise BaseException(
                     "_get_next_active_player is looping infinitely.")
 
+        return index
+
     def _get_previous_active_player(self, index):
         """Get the next active player counterclockwise around the table
         from the player at the index passed in. The index passed in must
@@ -263,6 +265,8 @@ class Game:
             if count > self.players_size:
                 raise BaseException(
                     "_get_previous_active_player is looping infinitely.")
+
+        return index
 
     def _get_next_player(self, index, step=1):
         """Get the player step positions to the left of the player at

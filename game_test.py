@@ -86,7 +86,7 @@ class TestGetActivePlayerFunctions(unittest.TestCase):
             player.active = False
 
         self.assertEqual(
-            self.game._get_previous_active_player(2), 0)
+            self.game._get_previous_active_player(3), 1)
 
     def test_get_next_within_list(self):
         """Attempt to find the next active player when that player comes
@@ -96,7 +96,7 @@ class TestGetActivePlayerFunctions(unittest.TestCase):
             player.active = False
 
         self.assertEqual(
-            self.game._get_next_active_player(0), 2)
+            self.game._get_next_active_player(1), 3)
 
     def test_get_previous_past_beginning(self):
         """Attempt to find the previous active player when that operation
@@ -106,7 +106,7 @@ class TestGetActivePlayerFunctions(unittest.TestCase):
             player.active = False
 
         self.assertEqual(
-            self.game._get_previous_active_player(0), 2)
+            self.game._get_previous_active_player(1), 3)
 
     def test_get_next_past_end(self):
         """Attempt to find the next active player when that operation will
@@ -116,7 +116,7 @@ class TestGetActivePlayerFunctions(unittest.TestCase):
             player.active = False
 
         self.assertEqual(
-            self.game._get_next_active_player(2), 0)
+            self.game._get_next_active_player(3), 1)
 
 
 class TestPlayerGetFunctions(unittest.TestCase):
