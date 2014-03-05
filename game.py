@@ -262,7 +262,10 @@ class Game:
         """Get the player to the right of the player at the index passed
         in. The index passed in must be a valid index.
         """
-        return index - 1
+        index -= step
+        while index < 0:
+            index += self.players_size
+        return index
 
     #Broke this down into two functions that can get the next or previous
     #player from any given index.
