@@ -181,7 +181,18 @@ class Game:
         """Called when the current betting cycle has concluded. This
         happens when the player whose turn it would currently be was the
         last player to raise."""
-        pass
+        if self.current_cycle == 0:
+            #Deal out three cards (the flop)
+            self.current_cycle += 1
+        elif self.current_cycle == 1:
+            #Deal out one card (the turn)
+            self.current_cycle += 1
+        elif self.current_cycle == 2:
+            #Deal out one card (the river)
+            self.current_cycle += 1
+        else:
+            #This was the last betting cycle
+            self._end_round()
 
     def _end_round(self, player=None):
         """Called when the current round ends - either when all players
@@ -195,7 +206,7 @@ class Game:
         else:
             #The showdown happens here; hands are compared & a winner is
             #determined.
-            pass
+            self._initialize_round()
 
     # def run_round(self):
     #     player_index = (self.last_raise + 1) % self.players_size
