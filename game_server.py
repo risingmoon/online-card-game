@@ -29,6 +29,8 @@ class GameRoomServer(object):
     def __call__(self, environ, start_response):
         """When called, the GameRoomServer class behaves as a dispatcher."""
 
+        #import pdb; pdb.set_trace()
+
         headers = [("Content-type", "text/html")]
         try:
             path = environ.get('PATH_INFO', None)
@@ -284,13 +286,6 @@ class GameRoomServer(object):
             return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
         else:
             return ('', ('Location', "%s/game" % self.base_url))
-
-
-game = GameRoomServer()
-
-
-def game_wrapper_app(environ, start_response):
-    return game(environ, start_response)
 
 
 if __name__ == '__main__':
