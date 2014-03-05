@@ -79,8 +79,8 @@ class Game:
                         return
         else:
             self.pot += bet
-            if self.players_list[self.current_player].bet > \
-                    self.players_list[self.current_player - 1].bet:
+            if self.players_list[self.current_player].bet > self.players_list[
+                self._get_previous_player(self.current_player)].bet:
                 self.last_raise = self.current_player
             # elif self.players_list[self.current_player].bet > \
             #         self.players_list[self.current_player - 1].bet:
@@ -107,13 +107,22 @@ class Game:
             'pot': self.pot,
         }
 
+        players = []
+
         if player is not None:
-            players = []
-            #Populate this list with dicts containing information we need
-            #to know about other players (their name, bet, and status).
-            #Order the list starting from the current player's left so
-            #that player data is displayed in an order that makes sense
-            #on their version of the page.
+            #Loop beginning with the player on this player's left up
+            #through the player on their right. Gather information about
+            #the other players that this player needs to be able to see
+            #on their game screen.
+            for other_player in self.players_list[player + 1:] + \
+                    self.players_list[:player]:
+                players.append({
+                    'name': other_player.name,
+                    'bet': other_player.bet,
+                    'points': other_player.points,
+                    'active': other_player.active,
+                })
+
             info.update({
                 'turn': True if player == self.current_player else False,
                 'dealer': True if player == info['dealer'] else False,
@@ -127,10 +136,17 @@ class Game:
                 'players': players,
             })
         else:
-            #If no player was specified, then a spectator is making this
-            #request, and we should return a little bit of information
-            #about all players. This is low-priority.
-            pass
+            #If a spectator is making this request, return a minimal amount
+            #of information on all players.
+            for other_player in self.players_list:
+                players.append({
+                    'name': other_player.name,
+                    'bet': other_player.bet,
+                    'points': other_player.points,
+                    'active': other_player.active,
+                })
+
+            info.update({'players': players})
 
     def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
