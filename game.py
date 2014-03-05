@@ -164,41 +164,29 @@ class Game:
             self.dealer += 1
             self.dealer %= self.players_size
 
-        small_blind = self.dealer + 1
-        small_blind %= self.players_size
+        small_blind = self._get_next_player(self.dealer)
 
-        big_blind = self.small_blind + 1
-        big_blind %= self.players_size
-
-        first_turn = self.big_blind + 1
-        first_turn %= self.players_size
-
-        #Clear all the attributes on players left over from the last round.
-        for player in self.players_list:
-            player.clear_round_attributes()
-
-        #Assign the proper attributes for the coming round to the players
-        #that we determined earlier.
-        self.players_list[self.dealer].dealer = True
-
-        self.players_list[small_blind].small_blind = True
-
-        self.players_list[big_blind].big_blind = True
+        big_blind = self._get_next_player(small_blind)
         self.last_raise = big_blind
 
-        #The player to the left of the big blind gets the first turn.
-        self.current_player = first_turn
-        self.players_list[first_turn].turn = True
+        self.current_player = self._get_next_player(big_blind)
 
-        #Force the small blind and big blind to place their bets.
+        #Deal two cards to each player and reset their bets from the
+        #last round.
+        for player in self.players_list:
+            player.bet = 0
+            player.hand = None
+            #Deal two cards here instead; to do
+
+        #Reset the pot and force the small blind and big blind to place
+        #their bets.
         self.pot = 0
         self.pot += self.players_list[small_blind].call(
             self.small_blind_points)
         self.pot += self.players_list[big_blind].call(
             self.big_blind_points)
-
-        #Deal two cards to each player.
-        #TBD
+        #Will eventually need to check that these players have enough
+        #money to place the bet.
 
     #These functions have been wrapped into _initialize_round.
     # def blinds(self):
