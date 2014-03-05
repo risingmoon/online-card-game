@@ -2,7 +2,7 @@ from player import Player
 from deck import Deck
 
 
-class Game:
+class Game(object):
     """A game of Texas Hold'em."""
     def __init__(self):
         self.players_size = 0
@@ -111,6 +111,7 @@ class Game:
             'small_blind': self._get_next_player(self.dealer),
             'big_blind': self._get_next_player(self.dealer, 2),
             'pot': self.pot,
+            'community': self.community,
         }
 
         players = []
@@ -154,6 +155,8 @@ class Game:
 
             info.update({'players': players})
 
+        return info
+
     def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
         the roles of small blind and big blind. If the "dealer" argument
@@ -176,13 +179,16 @@ class Game:
 
         self.current_player = self._get_next_player(big_blind)
 
+        #Reset the deck and community cards.
+        self.community = []
+        self.deck.__init__()
+
         #Deal two cards to each player and reset their bets and active
         #status from the last round.
         for player in self.players_list:
             player.bet = 0
             player.active = True
-            player.hand = None
-            #Deal two cards here instead; to do
+            player.hand = [self.deck.get_card() for i in range(2)]
 
         #Reset the pot and force the small blind and big blind to place
         #their bets.
@@ -209,10 +215,10 @@ class Game:
         else:
             if self.current_cycle == 0:
                 #Deal out three cards (the flop)
-                pass
+                self.community = [self.deck.get_card() for i in range(3)]
             else:
                 #Deal out one card (the turn or the river)
-                pass
+                self.community.append(self.deck.get_card())
 
             self.current_cycle += 1
             self.current_player = \
