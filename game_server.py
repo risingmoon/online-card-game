@@ -49,14 +49,12 @@ class GameRoomServer(object):
                 kwargs[key] = val[0]
 
             func, arg = self._resolve_path(path)
-            print "mapped url to function"
             #Overwrite idnum argument with corresponding argument parsed
             #out of the url, if present.
             if arg:
                 kwargs['idnum'] = str(arg)
 
             headers, status, body = func(**kwargs)
-            print "returned from function"
 
         except NameError:
             headers = [("Content-type", "text/html")]
@@ -79,7 +77,6 @@ class GameRoomServer(object):
 
         urls = [
             (r'^$', self.redirect_from_root),
-            (r'^login$', self.login),
             (r'^lobby$', self.lobby),
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
@@ -136,21 +133,6 @@ class GameRoomServer(object):
             return [("Content-type", "text/html"),
                     ("Location", "%s/lobby" % self.base_url)], \
                 "301 Redirect", ''
-            #return self.login()
-
-    def login(self, **kwargs):
-        page = """
-        <center>
-        <h1>Lobby</h1>
-        <div>
-        <form method="POST" action="/lobby/join">
-            <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" value="Join" />
-        </form>
-        </div>
-        </center>
-        """
-        return (page, None)
 
     def lobby_update(self, idnum=None, **kwargs):
         """Builds a json object containing information on the lobby that
@@ -247,7 +229,6 @@ class GameRoomServer(object):
         the game. If an id number is passed, it's specific to the game
         from their perspective.
         """
-        import pdb; pdb.set_trace()
         return [("Content-type", "application/json")], "200 OK", \
             json.dumps(self.game.poll_game(player=self.users[idnum][2]))
 
