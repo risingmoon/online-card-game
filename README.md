@@ -5,6 +5,9 @@ Contributors:
 
 Objects:
 
+Card Design:
+http://www.jfitz.com/cards/
+
 -Game:
     
     
