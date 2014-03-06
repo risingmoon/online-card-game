@@ -1,0 +1,4 @@
+python-all-dev
+python-pip
+nginx
+supervisor
