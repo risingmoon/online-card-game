@@ -11,6 +11,7 @@
             $(document).ready(function() {
 
                 $("#join").submit(function() {
+                    alert("called join form handler")
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/join',
@@ -61,13 +62,61 @@
                 function lobby_join(data) {
                     //Rebuilds the lobby into the version of the lobby that presents options
                     //to registered users.
-                    $("#join").attr('id', 'edit');
+                    $("#idnum").attr('value', data.idnum);
+
+                    var editForm = document.createElement("form");
+                    editForm.id = "edit";
+
+                    var editText = document.createElement("input");
+                    editText.type = "text";
+                    editText.id = "username";
+                    editText.placeholder = "Username";
+
+                    var editButton = document.createElement("input");
+                    editButton.type = "submit";
+                    editButton.value = "Change Start Vote";
+
+                    editForm.appendChild(editText)
+                    editForm.appendChild(editButton);
+
+                    var voteForm = document.createElement("form");
+                    voteForm.id = "vote";
+
+                    var voteButton = document.createElement("input");
+                    voteButton.type = "submit";
+                    voteButton.value = "Change Start Vote";
+
+                    voteForm.appendChild(voteButton);
+
+                    var leaveForm = document.createElement("form");
+                    leaveForm.id = "leave";
+
+                    var leaveButton = document.createElement("input");
+                    leaveButton.type = "submit";
+                    leaveButton.value = "Leave Game";
+
+                    leaveForm.appendChild(leaveButton);
+
+                    $("#formoptions").append(editForm);
+                    $("#formoptions").append(voteForm);
+                    $("#formoptions").append(leaveForm);
+
+                    long_poll();
+
+                    return false;
                 }
 
                 function lobby_leave(data) {
                     //Rebuilds the lobby into the version of the lobby that only allows players
                     //to join and view the list of active players.
-                    $("#join").attr('id', 'edit');
+                    $("#edit").attr('id', 'join');
+                    $("#submitbutton").attr('value', 'Join');
+                    $("#idnum").attr('value', '');
+
+                    $("#vote").remove();
+                    $("#leave").remove();
+
+                    return false;
                 }
 
                 function long_poll() {
@@ -91,9 +140,10 @@
     <body>
         <h1>Lobby</h1>
         <div id="formoptions">
+            <input type="hidden" id="idnum" value="" />
             <form id="join">
                 <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Join" />
+                <input type="submit" value="Join" id="submitbutton" />
             </form>
         </div>
         <div>

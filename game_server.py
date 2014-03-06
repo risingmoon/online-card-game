@@ -168,6 +168,8 @@ class GameRoomServer(object):
                 userdata.append(self.users[userid])
 
             info = {'users': userdata}
+            if idnum:
+                info.update({'idnum': idnum})
 
         return [("Content-type", "application/json")], \
             "200 OK", json.dumps(info)
