@@ -29,7 +29,19 @@
                         url: '/lobby/edit',
                         timeout: 10000,
                         dataType: 'json',
-                        data: {'username': $("#username").val()},
+                        data: {'idnum': $("#idnum").val(), 'username': $("#username").val()},
+                        success: lobby_update
+                    });
+                    return false;
+                });
+
+                $("#leave").submit(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/leave',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'idnum': $("#idnum").val()},
                         success: lobby_update
                     });
                     return false;
@@ -63,6 +75,7 @@
                     //Rebuilds the lobby into the version of the lobby that presents options
                     //to registered users.
                     $("#idnum").attr('value', data.idnum);
+                    $("#join").remove()
 
                     var editForm = document.createElement("form");
                     editForm.id = "edit";
@@ -74,7 +87,7 @@
 
                     var editButton = document.createElement("input");
                     editButton.type = "submit";
-                    editButton.value = "Change Start Vote";
+                    editButton.value = "Change Username";
 
                     editForm.appendChild(editText)
                     editForm.appendChild(editButton);
@@ -109,12 +122,27 @@
                 function lobby_leave(data) {
                     //Rebuilds the lobby into the version of the lobby that only allows players
                     //to join and view the list of active players.
-                    $("#edit").attr('id', 'join');
-                    $("#submitbutton").attr('value', 'Join');
                     $("#idnum").attr('value', '');
 
                     $("#vote").remove();
                     $("#leave").remove();
+
+                    var joinForm = document.createElement("form");
+                    joinForm.id = "join";
+
+                    var joinText = document.createElement("input");
+                    joinText.type = "text";
+                    joinText.id = "username";
+                    joinText.placeholder = "Username";
+
+                    var editButton = document.createElement("input");
+                    joinButton.type = "submit";
+                    joinButton.value = "Join Game";
+
+                    joinForm.appendChild(joinText)
+                    joinForm.appendChild(joinButton);
+
+                    $("#formoptions").append(joinForm);
 
                     return false;
                 }
@@ -143,7 +171,7 @@
             <input type="hidden" id="idnum" value="" />
             <form id="join">
                 <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Join" id="submitbutton" />
+                <input type="submit" value="Join Game" id="submitbutton" />
             </form>
         </div>
         <div>
