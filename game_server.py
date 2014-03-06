@@ -79,12 +79,11 @@ class GameRoomServer(object):
             (r'^$', self.redirect_from_root),
             (r'^login$', self.login),
             (r'^lobby$', self.lobby),
-            (r'^lobby/(\d+)$', self.lobby),
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
+            (r'^lobby/update$', self.lobby_update),
             (r'^game$', self.game_room),
-            (r'^game/(\d+)$', self.game_room),
         ]
 
         matchpath = path.lstrip('/')
@@ -103,14 +102,14 @@ class GameRoomServer(object):
             #out, if applicable, so they are redirected as the appropriate
             #user.
             if re.match(r'^lobby', matchpath) and self.in_game:
-                return self.game_room_redirect, arg
+                return self.game_room, arg
 
             #If the user tries to get into a game, but a game is not in
             #session, redirect them to the lobby. Hold on to the arg parsed
             #out, if applicable, so they are redirected as the appropriate
             #user.
             if re.match(r'^game', matchpath) and not self.in_game:
-                return self.lobby_redirect, arg
+                return self.lobby, arg
 
             return func, arg
 
@@ -146,7 +145,7 @@ class GameRoomServer(object):
         """
         return (page, None)
 
-    def update_lobby(self, idnum=None, **kwargs):
+    def lobby_update(self, idnum=None, **kwargs):
         """Builds a json object containing information on the lobby that
         is sent to the user when their browser long polls or when they
         complete any operation that changes the state of the lobby. If
@@ -178,7 +177,8 @@ class GameRoomServer(object):
         html and serving it to them.
         """
 
-        with open('static/lobby.html') as infile:
+        # with open('static/lobby.html') as infile:
+        with open('lobby.html') as infile:
             page = infile.read()
 
         return [("Content-type", "text/html")], "200 OK", page
@@ -195,7 +195,7 @@ class GameRoomServer(object):
 
         self.users[idnum] = [username, 'No']
 
-        return self.update_lobby(idnum=idnum)
+        return self.lobby_update(idnum=idnum)
 
     def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in
@@ -216,14 +216,14 @@ class GameRoomServer(object):
         if votecheck:
             self.in_game = True
 
-        return self.update_lobby(idnum=idnum)
+        return self.lobby_update(idnum=idnum)
 
     def lobby_edit(self, idnum=None, username="Player", **kwargs):
         """Allows the user with the given id number to change their
         username to the username passed in.
         """
         self.users[idnum][0] = username
-        return self.update_lobby(idnum=idnum)
+        return self.lobby_update(idnum=idnum)
 
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>", None

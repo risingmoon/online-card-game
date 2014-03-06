@@ -3,43 +3,91 @@
         <meta charset="utf-8">
         <title></title>
         <link rel="stylesheet" href="css/bootstrap.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <!--script src="js/vendor/modernizr-2.6.2.min.js"></script-->
-    </head>
-    <body>
-        <center>
-                <h1>Lobby</h1>
-            <div>
-                <form method="POST" action="/lobby/edit">
-                    <input type="text" name="username" value="%s"/>
-                    <input type="submit" value="Change Username" />
-                    <input type="hidden" name="idnum" value="%s" />
-                </form>
-                <form method="POST" action="/lobby/vote">
-                    <input type="submit" value="Change Vote" />
-                    <input type="hidden" name="idnum" value="%s" />
-                </form>
-            </div>
-            <div>
-                <form method="POST" action="/lobby/join">
-                    <input type="text" name="username" placeholder="Username"/>
-                    <input type="submit" value="Join" />
-                </form>
-            </div>
 
+        <!-- Here's our jQuery/Ajax stuff - including long polling. -->
+        <script>
+            $(document).ready(function() {
+
+                function lobby_update(data) {
+                    var json_data = jQuery.parseJSON(data);
+                    $("#updatelabel").remove();
+                    $("#players").empty("#playerdata");
+
+                    //for(i = 0; i < )
+                }
+
+                function long_poll() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/update',
+                        timeout: 10000,
+                        async: 'true',
+                        cache: 'false',
+                        dataType: 'json',
+                        success: lobby_update
+                    });
+                };
+
+                setInterval(long_poll, 10000);
+
+            })
+        </script>
+    </head>
+
+    <body>
+        <h1>Lobby</h1>
+        <div>
+            <form id="join" method="POST" action="/lobby/join">
+                <input type="text" name="username" placeholder="Username"/>
+                <input type="submit" value="Join" />
+            </form>
+        </div>
+        <div id="players">
             <table>
-                
                 <tr>
                     <td>Players</td>
                     <td>Vote</td>
                 </tr>
-                <tr>
-                    <td>{0}</td>
-                    <td>{1}</td>
-                </tr>
             </table>
-            <form method="POST" action="/lobby%s">
-                <input type="submit" value="Update" />
+            <p id="updatelabel">Updating...</p>
+        </div>
+    </body>
+</html>
+
+    <body>
+        <h1>Lobby</h1>
+        <div>
+            <form method="POST" action="/lobby/edit">
+                <input type="text" name="username" value="%s"/>
+                <input type="submit" value="Change Username" />
+                <input type="hidden" name="idnum" value="%s" />
             </form>
-        </center>
+            <form method="POST" action="/lobby/vote">
+                <input type="submit" value="Change Vote" />
+                <input type="hidden" name="idnum" value="%s" />
+            </form>
+        </div>
+        <div>
+            <form method="POST" action="/lobby/join">
+                <input type="text" name="username" placeholder="Username"/>
+                <input type="submit" value="Join" />
+            </form>
+        </div>
+
+        <table>
+            <tr>
+                <td>Players</td>
+                <td>Vote</td>
+            </tr>
+            <tr>
+                <td>{0}</td>
+                <td>{1}</td>
+            </tr>
+        </table>
+        <form method="POST" action="/lobby%s">
+            <input type="submit" value="Update" />
+        </form>
     </body>
 </html>
