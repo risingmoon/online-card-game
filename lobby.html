@@ -14,6 +14,19 @@
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/join',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'username': $("#username").val()},
+                        success: lobby_join
+                    });
+                    return false;
+                });
+
+                $("#edit").submit(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/edit',
+                        timeout: 10000,
                         dataType: 'json',
                         data: {'username': $("#username").val()},
                         success: lobby_update
@@ -22,7 +35,6 @@
                 });
 
                 function lobby_update(data) {
-                    var json_data = jQuery.parseJSON(data);
                     $("#updatelabel").remove();
                     $("#players").empty();
 
@@ -46,6 +58,18 @@
                     }
                 }
 
+                function lobby_join(data) {
+                    //Rebuilds the lobby into the version of the lobby that presents options
+                    //to registered users.
+                    $("#join").attr('id', 'edit');
+                }
+
+                function lobby_leave(data) {
+                    //Rebuilds the lobby into the version of the lobby that only allows players
+                    //to join and view the list of active players.
+                    $("#join").attr('id', 'edit');
+                }
+
                 function long_poll() {
                     $.ajax({
                         type: 'POST',
@@ -58,7 +82,7 @@
                     });
                 }
 
-                //long_poll();
+                long_poll();
                 setInterval(long_poll, 10000);
             });
         </script>
@@ -92,7 +116,7 @@
     <body>
         <h1>Lobby</h1>
         <div>
-            <form method="POST" action="/lobby/edit">
+            <form id="edit" action="/lobby/edit">
                 <input type="text" name="username" value="%s"/>
                 <input type="submit" value="Change Username" />
                 <input type="hidden" name="idnum" value="%s" />
