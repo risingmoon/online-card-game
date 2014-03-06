@@ -1,6 +1,7 @@
 from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
 from urlparse import parse_qs
+from game import Game
 import json
 import re
 
@@ -12,7 +13,7 @@ class GameRoomServer(object):
 
     def __init__(self):
         """Initialize the game room with a game object."""
-        #self.game = game_placeholder.Game()
+        self.game = Game()
 
         #Each user can be tied with a Player object in the game.
         self.users = {}
@@ -85,6 +86,9 @@ class GameRoomServer(object):
             (r'^lobby/leave$', self.lobby_leave),
             (r'^lobby/update$', self.lobby_update),
             (r'^game$', self.game_room),
+            (r'^game/call$', self.game_room_call),
+            (r'^game/fold$', self.game_room_fold),
+            (r'^game/update$', self.game_room_update),
         ]
 
         matchpath = path.lstrip('/')
@@ -231,9 +235,23 @@ class GameRoomServer(object):
         del self.users[idnum]
         return self.lobby_update()
 
+    def game_room_update(self, idnum=None, **kwargs):
+        """Call the game's poll_game method to get a json data dump on
+        the game. If an id number is passed, it's specific to the game
+        from their perspective.
+        """
+        return [("Content-type", "application/json")], "200 OK", \
+            json.dumps(game.poll_game(player=self.users[idnum][2]))
+
     def game_room(self, idnum=None, **kwargs):
         return [("Content-type", "text/html")], "200 OK", \
             "<h1>We are in-game.</h1>"
+
+    def game_room_call(self, idnum=None, bet=0):
+        pass
+
+    def game_room_fold(self, idnum=None):
+        pass
 
 
 if __name__ == '__main__':
