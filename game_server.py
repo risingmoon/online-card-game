@@ -222,7 +222,7 @@ class GameRoomServer(object):
             self.in_game = True
             for userid in sorted(self.users):
                 self.users[userid].append(
-                    game.addPlayer(self.users[userid][0])
+                    game.add_player(self.users[userid][0])
                 )
 
         return self.lobby_update(idnum=idnum)
