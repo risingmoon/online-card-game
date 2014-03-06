@@ -6,7 +6,7 @@ class Evaluator(object):
 
     def __init__(self):
         '''
-        Loads dictionaries from pickle filesThe dictionaries contain a
+        Loads dictionaries from pickle files. The dictionaries contain a
         unique key for every possible five card hand, mapped to a tuple
         of the corresponding hand's rank and the name of that hand.
         '''
