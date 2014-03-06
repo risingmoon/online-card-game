@@ -22,6 +22,18 @@
         <script>
             $(document).ready(function() {
 
+                function call_handler() {
+                    //stuff
+                }
+
+                function fold_handler() {
+                    //stuff
+                }
+
+                function raise_handler() {
+                    //stuff
+                }
+
                 function game_update(data) {
                     //$("#updatelabel").remove();
                     $("#others").empty();
@@ -64,6 +76,20 @@
                         card.append(image);
 
                         $("#community").append(card);
+                    }
+
+                    $("#hand").empty();
+
+                    for(i = 0; i < data.hand.length; i++) {
+                        var card = document.createElement("div");
+                        card.class = "col-xs-6";
+
+                        var image = document.createElement("img");
+                        img.src = "images/table-holder2.png";
+
+                        card.append(image);
+
+                        $("#hand").append(card);
                     }
                 }
 
@@ -131,7 +157,7 @@
 
       <div id="footer">
         <div class="row">
-        <div class="col-xs-4">
+        <div class="col-xs-4" id="hand">
             <div class="col-xs-6">
             <img src="images/table-holder2.png">
             </div>
@@ -142,12 +168,12 @@
         <div class="col-xs-4">DATA
         </div>
         <div class="col-xs-4">
-            <p><button type="button" class="btn btn-default btn-lg btn-block">Call</button></p>
+            <p><button type="button" class="btn btn-default btn-lg btn-block" id="call">Call</button></p>
            <form class="form-inline" role="form">
             </form>
-            <p><button type="button" class="btn btn-default btn-lg btn-block">Fold</button></p>
+            <p><button type="button" class="btn btn-default btn-lg btn-block" id="fold">Fold</button></p>
 
-            <p><button type="submit" class="btn btn-default btn-lg btn-block">Raise</button></p>
+            <p><button type="submit" class="btn btn-default btn-lg btn-block" id="raise">Raise</button></p>
             <div class="form-group">
             <label class="sr-only">Email address</label>
             <input type="number" class="form-control" id="raise" placeholder="# of points">

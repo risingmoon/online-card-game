@@ -141,13 +141,18 @@ class Game(object):
                 'dealer': True if player == info['dealer'] else False,
                 'small_blind': True if player == info['small_blind'] else False,
                 'big_blind': True if player == info['big_blind'] else False,
-                'hand': self.players_list[player].hand,
                 'points': self.players_list[player].points,
                 'bet': self.players_list[player].bet,
                 'active': self.players_list[player].active,
                 'name': self.players_list[player].name,
                 'players': players,
             })
+
+            hand = []
+            for card in self.players_list[player].hand:
+                hand.append([card.value, card.suit, card.string])
+
+            info.update({'hand': hand})
         else:
             #If a spectator is making this request, return a minimal amount
             #of information on all players.
