@@ -4,6 +4,7 @@
         <title></title>
         <link rel="stylesheet" href="static/css/bootstrap.css">
         <link rel="stylesheet" href="static/css/signin.css">
+        <link href="/static/css/lobby.css" rel="stylesheet">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <!--script src="js/vendor/modernizr-2.6.2.min.js"></script-->
 
@@ -159,36 +160,42 @@
     </head>
 
     <body>
-        <h1>Lobby</h1>
-        <div id="formoptions">
-            <input type="hidden" id="idnum" value="" />
-            <form id="join">
-                <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Join Game" id="submitbutton" />
-            </form>
-            <form id="edit">
-                <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Change Username" id="submitbutton" />
-            </form>
-            <form id="vote">
-                <input type="submit" value="Change Start Vote" id="submitbutton" />
-            </form>
-            <form id="leave">
-                <input type="submit" value="Leave Game" id="submitbutton" />
-            </form>
-        </div>
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Players</th>
-                        <th>Vote</th>
-                    </tr>
-                </thead>
-                <tbody id="players">
-                </tbody>
-            </table>
-            <p id="updatelabel">Updating...</p>
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Game Lobby</h3>
+                </div>
+                <div id="formoptions">
+                    <input type="hidden" id="idnum" value="" />
+                    <form id="join">
+                        <input type="text" id="username" placeholder="Username"/>
+                        <input type="submit" value="Join Game" id="submitbutton" />
+                    </form>
+                    <form id="edit">
+                        <input type="text" id="username" placeholder="Username"/>
+                        <input type="submit" value="Change Username" id="submitbutton" />
+                    </form>
+                    <form id="vote">
+                        <input type="submit" value="Change Start Vote" id="submitbutton" />
+                    </form>
+                    <form id="leave">
+                        <input type="submit" value="Leave Game" id="submitbutton" />
+                    </form>
+                </div>
+                <div>
+                    <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Players</th>
+                                    <th>Vote</th>
+                                </tr>
+                            </thead>
+                        <tbody id="players">
+                        </tbody>
+                    </table>
+                    <p id="updatelabel">Updating...</p>
+                </div>
+            </div>
         </div>
     </body>
 </html>

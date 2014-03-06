@@ -127,18 +127,18 @@ class GameRoomServer(object):
                     ("Location", "%s/game" % self.base_url)], \
                 "301 Redirect", ''
         else:
-            # return [("Content-type", "text/html"),
-            #         ("Location", "%s/lobby" % self.base_url)], \
-            #     "301 Redirect", ''
             return [("Content-type", "text/html"),
-                    ("Location", "%s/login" % self.base_url)], \
+                    ("Location", "%s/lobby" % self.base_url)], \
                 "301 Redirect", ''
-            #return self.login()
+            # return [("Content-type", "text/html"),
+            #         ("Location", "%s/login" % self.base_url)], \
+            #     "301 Redirect", ''
+            # #return self.login()
 
     def login(self, **kwargs):
-        with open('templates/login.html','r') as html_file:
+        with open('templates/login.html', 'r') as html_file:
             page = html_file.read()
-        return (page, None)
+        return [("Content-type", "text/html")], "200 OK", page
 
     def lobby_update(self, idnum=None, **kwargs):
         """Builds a json object containing information on the lobby that
@@ -191,6 +191,15 @@ class GameRoomServer(object):
         self.users[idnum] = [username, 'No']
 
         return self.lobby_update(idnum=idnum)
+
+        # idnum = str(self.next_id)
+        # self.next_id += 1
+        # self.users[idnum] = [username, 'No']
+
+        # with open('lobby.html') as infile:
+        #     page = infile.read()
+
+        # return [("Content-type", "text/html")], "200 OK", page
 
     def lobby_vote(self, idnum=None, **kwargs):
         """Function called when the player toggles their start vote in
