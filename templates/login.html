@@ -24,6 +24,102 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <script>
+            $(document).ready(function() {
+
+                //Immediately detach the form elements needed for registered
+                //players from the DOM.
+                var joinform = $("#join");
+                var editform = $("#edit").detach();
+                var voteform = $("#vote").detach();
+                var leaveform = $("#leave").detach();
+
+                function join_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/join',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'username': $("#username").val()},
+                        success: lobby_join
+                    });
+                    return false;
+                }
+
+                
+                //Immediately tie the "join" form to its handler function
+                $("#join").on('submit', join_handler);
+
+                function lobby_update(data) {
+                    if(data.redirect) {
+                        window.location.replace('/game');
+                    } else {
+                        $("#updatelabel").remove();
+                        $("#players").empty();
+
+                        for(i = 0; i < data.users.length; i++) {
+                            var node = document.createElement("tr");
+                            node.id = "playerdata";
+
+                            var playerName = data.users[i][0];
+                            var playerVote = data.users[i][1];
+
+                            if($("#idnum").val() && i == 0) {
+                                playerName += ' (You)';
+                            }
+
+                            var nameField = document.createElement("td");
+                            nameField.appendChild(document.createTextNode(playerName));
+
+                            var voteField = document.createElement("td");
+                            voteField.appendChild(document.createTextNode(playerVote));
+
+                            node.appendChild(nameField);
+                            node.appendChild(voteField);
+
+                            $("#players").append(node);
+                        }
+                    }
+                }
+
+                function lobby_join(data) {
+                    //Rebuilds the lobby into the version of the lobby that presents options
+                    //to registered users.
+                    $("#idnum").attr('value', data.idnum);
+
+                    $("#join").detach();
+
+                    $("#formoptions").append(editform);
+                    $(editform).on('submit', edit_handler);
+
+                    $("#formoptions").append(voteform);
+                    $(voteform).on('submit', vote_handler);
+
+                    $("#formoptions").append(leaveform);
+                    $(leaveform).on('submit', leave_handler);
+
+                    long_poll();
+
+                    return false;
+                }
+
+                function long_poll() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/update',
+                        timeout: 10000,
+                        async: 'true',
+                        cache: 'false',
+                        data: {'idnum': $("#idnum").val()},
+                        dataType: 'json',
+                        success: lobby_update
+                    });
+                }
+
+                long_poll();
+                setInterval(long_poll, 3000);
+            });
+        </script>
   </head>
 
   <body>
@@ -32,7 +128,7 @@
 
       <form method="POST" action="/lobby/join" class="form-signin" role="form">
         <h2 class="form-signin-heading">Please sign in</h2>
-        <input type="email" class="form-control" name="username" placeholder="Email address" required autofocus>
+        <input type="text" class="form-control" name="username" placeholder="Email address" required autofocus>
         <button class="btn btn-lg btn-primary btn-block" type="submit" value="Join">Join</button>
       </form>
 

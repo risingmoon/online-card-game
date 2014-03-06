@@ -127,23 +127,17 @@ class GameRoomServer(object):
                     ("Location", "%s/game" % self.base_url)], \
                 "301 Redirect", ''
         else:
+            # return [("Content-type", "text/html"),
+            #         ("Location", "%s/lobby" % self.base_url)], \
+            #     "301 Redirect", ''
             return [("Content-type", "text/html"),
-                    ("Location", "%s/lobby" % self.base_url)], \
+                    ("Location", "%s/login" % self.base_url)], \
                 "301 Redirect", ''
             #return self.login()
 
     def login(self, **kwargs):
-        page = """
-        <center>
-        <h1>Lobby</h1>
-        <div>
-        <form method="POST" action="/lobby/join">
-            <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" value="Join" />
-        </form>
-        </div>
-        </center>
-        """
+        with open('templates/login.html','r') as html_file:
+            page = html_file.read()
         return (page, None)
 
     def lobby_update(self, idnum=None, **kwargs):
