@@ -102,15 +102,15 @@ class GameRoomServer(object):
             #session, redirect them to the game. Hold on to the arg parsed
             #out, if applicable, so they are redirected as the appropriate
             #user.
-            if re.match(r'^lobby', matchpath) and self.in_game:
-                return self.game_room, arg
+            # if re.match(r'^lobby', matchpath) and self.in_game:
+            #     return self.game_room, arg
 
             #If the user tries to get into a game, but a game is not in
             #session, redirect them to the lobby. Hold on to the arg parsed
             #out, if applicable, so they are redirected as the appropriate
             #user.
-            if re.match(r'^game', matchpath) and not self.in_game:
-                return self.lobby, arg
+            # if re.match(r'^game', matchpath) and not self.in_game:
+            #     return self.lobby, arg
 
             return func, arg
 
@@ -232,7 +232,8 @@ class GameRoomServer(object):
         return self.lobby_update()
 
     def game_room(self, idnum=None, **kwargs):
-        return "<h1>We are in-game.</h1>", None
+        return [("Content-type", "text/html")], "200 OK", \
+            "<h1>We are in-game.</h1>"
 
 
 if __name__ == '__main__':

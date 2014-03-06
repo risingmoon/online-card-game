@@ -42,7 +42,6 @@
                 }
 
                 function leave_handler(e) {
-                    alert("called leave form handler");
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/leave',
@@ -55,7 +54,6 @@
                 }
 
                 function vote_handler(e) {
-                    alert($("#idnum").val());
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/vote',
@@ -68,29 +66,37 @@
                 }
 
                 //Immediately tie the "join" form to its handler function
-                $("#join").on('submit', join_handler)
+                $("#join").on('submit', join_handler);
 
                 function lobby_update(data) {
-                    $("#updatelabel").remove();
-                    $("#players").empty();
+                    if(data.redirect) {
+                        window.location.replace('/game');
+                    } else {
+                        $("#updatelabel").remove();
+                        $("#players").empty();
 
-                    for(i = 0; i < data.users.length; i++) {
-                        var node = document.createElement("tr");
-                        node.id = "playerdata";
+                        for(i = 0; i < data.users.length; i++) {
+                            var node = document.createElement("tr");
+                            node.id = "playerdata";
 
-                        var playerName = data.users[i][0];
-                        var playerVote = data.users[i][1];
+                            var playerName = data.users[i][0];
+                            var playerVote = data.users[i][1];
 
-                        var nameField = document.createElement("td");
-                        nameField.appendChild(document.createTextNode(playerName));
+                            if($("#idnum").val() && i == 0) {
+                                playerName += ' (You)';
+                            }
 
-                        var voteField = document.createElement("td");
-                        voteField.appendChild(document.createTextNode(playerVote));
+                            var nameField = document.createElement("td");
+                            nameField.appendChild(document.createTextNode(playerName));
 
-                        node.appendChild(nameField);
-                        node.appendChild(voteField);
+                            var voteField = document.createElement("td");
+                            voteField.appendChild(document.createTextNode(playerVote));
 
-                        $("#players").append(node);
+                            node.appendChild(nameField);
+                            node.appendChild(voteField);
+
+                            $("#players").append(node);
+                        }
                     }
                 }
 
@@ -99,7 +105,7 @@
                     //to registered users.
                     $("#idnum").attr('value', data.idnum);
 
-                    $("#join").detach()
+                    $("#join").detach();
 
                     $("#formoptions").append(editform);
                     $(editform).on('submit', edit_handler);
@@ -139,13 +145,14 @@
                         timeout: 10000,
                         async: 'true',
                         cache: 'false',
+                        data: {'idnum': $("#idnum").val()},
                         dataType: 'json',
                         success: lobby_update
                     });
                 }
 
                 long_poll();
-                setInterval(long_poll, 10000);
+                setInterval(long_poll, 3000);
             });
         </script>
     </head>
