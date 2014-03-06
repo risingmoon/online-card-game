@@ -224,9 +224,9 @@ class GameRoomServer(object):
             self.in_game = True
             for userid in sorted(self.users):
                 self.users[userid].append(
-                    game.add_player(self.users[userid][0])
+                    self.game.add_player(self.users[userid][0])
                 )
-                print "added user with index %s" % self.users[userid][2]
+                self.game.initialize_game()
 
         return self.lobby_update(idnum=idnum)
 
@@ -255,7 +255,10 @@ class GameRoomServer(object):
         """Read in and serve the game room HTML."""
         # with open('static/game.html') as infile:
         with open('game.html') as infile:
-            page = infile.read()
+            lines = infile.readlines()
+            index = lines.index("//PYTHON\n")
+            lines[index] = '$("#idnum").attr("value", %s);' % idnum
+            page = ''.join(lines)
 
         return [("Content-type", "text/html")], "200 OK", page
 
