@@ -15,15 +15,18 @@ class Game:
         self.pot = 0
 
         self.current_cycle = 0
+        self.end_of_first = 0  # To prevent skipping big blind player
 
         self.min_bet = 0
         self.small_blind_points = 5
         self.big_blind_points = 10
-        self.initial_points = 100
+        self.initial_points = 200
 
         self.deck = None
         self.common_cards = []
         self.evaluator = Evaluator()
+
+        self.done = False  # To be removed after command line testing
 
     #The game's API consists entirely of the next 4 (possibly 5) methods:
     #add_player, MAYBE remove_player, initialize_game, update_game, and
@@ -72,15 +75,21 @@ class Game:
         #made by the player & prompt them to redo if their actions were
         #invalid.
 
-        #If the player just folded and only one active player remains.
-        if fold and self._poll_active_players() == 1:
+        #If only one active player remains.
+        if self._poll_active_players() == 1:
             self._end_round(
                 self._get_next_active_player(self.current_player))
+
+        if self.end_of_first:
+            self.end_of_first = False
+            if bet == 0:
+                self._end_cycle()
+                return
 
         #Otherwise, the player just checked or placed a bet.
         #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
-        else:
+        if not fold:
             if self.players_list[self.current_player].bet < self.players_list[
                     self._get_previous_active_player(self.current_player)].bet:
                 raise ValueError(
@@ -91,14 +100,22 @@ class Game:
             if self.players_list[self.current_player].bet > self.players_list[
                     self._get_previous_active_player(self.current_player)].bet:
                 self.last_raise = self.current_player
+                self.min_bet = self.players_list[self.current_player].bet
 
-            self.current_player = \
-                self._get_next_active_player(self.current_player)
+        self.current_player = \
+            self._get_next_active_player(self.current_player)
 
-            #If we have made it around the table to the last player who
-            #raised, and no additional raises have been made, end this
-            #betting cycle.
-            if self.last_raise == self.current_player:
+        #If we have made it around the table to the last player who
+        #raised, and no additional raises have been made, end this
+        #betting cycle. An exception is made for the first round of
+        #betting, in which case the player who bet the big blind gets
+        #an opportunity to raise or check.
+        if self.last_raise == self.current_player:
+            if (
+                self.current_player == self._get_next_player(self.dealer, 2)
+                    and self.current_cycle == 0):
+                self.end_of_first = True
+            else:
                 self._end_cycle()
 
     def poll_game(self, player=None):
@@ -195,10 +212,12 @@ class Game:
             self.small_blind_points)
         self.pot += self.players_list[big_blind].call(
             self.big_blind_points)
+        self.min_bet = self.big_blind_points
         #Will eventually need to check that these players have enough
         #points to place the bet.
 
         self.current_cycle = 0
+        self.common_cards = []
 
     def _end_cycle(self):
         """Called when the current betting cycle has concluded. This
@@ -221,8 +240,12 @@ class Game:
                 self.common_cards.append(self.deck.get_card())
 
             self.current_cycle += 1
+
+            # Sets current player to first active player left of the big blind.
             self.current_player = \
-                self._get_next_active_player(self.dealer)
+                self._get_next_active_player(
+                    self._get_next_player(self.dealer, 2))
+            self.last_raise = self.current_player
 
     def _end_round(self, winner=None):
         """Called when the current round ends - either when all players
@@ -244,7 +267,9 @@ class Game:
         if winner is None:
             for index, player in enumerate(self.players_list):
                 if player.active:
-                    seven_cards = self.common_cards.extend(player.hand)
+                    seven_cards = []
+                    seven_cards.extend(self.common_cards)
+                    seven_cards.extend(player.hand)
                     rank, string, cards = self.evaluator.get_best(seven_cards)
                     if rank < best_rank:
                         if Tie:
@@ -267,6 +292,16 @@ class Game:
                 self.players_list[player_index].points += split_pot
         else:
             self.players_list[winner].points += self.pot
+
+        #  Add iteration through players list to ensure each player has
+        #  points >= big_blind_amount. Remove the player from the game
+        #  if they do not.
+
+        #  For testing by running from command line.
+        self.done = True
+        self.best_string = best_string
+        self.pot_won = self.pot
+        self.winner = self.players_list[winner].name
 
         self._initialize_round()
 
