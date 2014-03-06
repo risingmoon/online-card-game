@@ -1,26 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap 101 Template</title>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Bootstrap 101 Template</title>
 
 
-    <!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/custom.css" rel="stylesheet" >
+        <!-- Bootstrap -->
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/custom.css" rel="stylesheet" >
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+          <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+          <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <!-- Ajax javascript. -->
+        <script>
+            $(document).ready(function() {
+
+                function game_update(data) {
+                    //$("#updatelabel").remove();
+                    $("#others").empty();
+
+                    for(i = 0; i < data.players.length; i++) {
+                        var node = document.createElement("div");
+                        node.class = "col-xs-4";
+
+                        var list = document.createElement("ul");
+                        list.class = "list-group";
+
+                        var playerName = data.players[i].name;
+                        var playerBet = data.players[i].bet;
+
+                        var nameField = document.createElement("li");
+                        nameField.class = "list-group-item";
+                        nameField.appendChild(document.createTextNode(playerName));
+
+                        var betField = document.createElement("li");
+                        betField.class = "list-group-item";
+                        voteField.appendChild(document.createTextNode(playerBet));
+
+                        list.appendChild(nameField);
+                        list.appendChild(voteField);
+
+                        node.appendChild(list);
+
+                        $("#others").append(node);
+                    }
+
+                    $("#community").empty();
+
+                    for(i = 0; i < data.community.length; i++) {
+                        //update community cards
+                    }
+                }
+
+                function long_poll() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/game/update',
+                        timeout: 10000,
+                        async: 'true',
+                        cache: 'false',
+                        data: {'idnum': $("#idnum").val()},
+                        dataType: 'json',
+                        success: game_update
+                    });
+                }
+
+                long_poll();
+                setInterval(long_poll, 3000);
+            });
+        </script>
+    </head>
   <body>
+    <input type="hidden" id="idnum" value="" />
     <div class="container-fluid">
-      <div class="row">
+      <div class="row" id="others">
         <div class="col-xs-4">
                     <ul class="list-group">
                         <li class="list-group-item">Player1</li>
@@ -41,7 +101,7 @@
         </div>
       </div><!-- row -->
       <div class="container">
-      <div class="row">
+      <div class="row" id="community">
         <div class="col-xs-1 col-xs-offset-4">
             <img src="images/table-holder2.png">
         </div>
