@@ -10,8 +10,14 @@
         <script>
             $(document).ready(function() {
 
-                $("#join").submit(function() {
-                    alert("called join form handler")
+                //Immediately detach the form elements needed for registered
+                //players from the DOM.
+                var joinform = $("#join")
+                var editform = $("#edit").detach();
+                var voteform = $("#vote").detach();
+                var leaveform = $("#leave").detach();
+
+                function join_handler(e) {
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/join',
@@ -21,9 +27,9 @@
                         success: lobby_join
                     });
                     return false;
-                });
+                }
 
-                $("#edit").submit(function() {
+                function edit_handler(e) {
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/edit',
@@ -33,19 +39,35 @@
                         success: lobby_update
                     });
                     return false;
-                });
+                }
 
-                $("#leave").submit(function() {
+                function leave_handler(e) {
+                    alert("called leave form handler");
                     $.ajax({
                         type: 'POST',
                         url: '/lobby/leave',
                         timeout: 10000,
                         dataType: 'json',
                         data: {'idnum': $("#idnum").val()},
-                        success: lobby_update
+                        success: lobby_leave
                     });
                     return false;
-                });
+                }
+
+                function vote_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/leave',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'idnum': $("#idnum").val()},
+                        success: lobby_leave
+                    });
+                    return false;
+                }
+
+                //Immediately tie the "join" form to its handler function
+                $("#join").on('submit', join_handler)
 
                 function lobby_update(data) {
                     $("#updatelabel").remove();
@@ -75,44 +97,17 @@
                     //Rebuilds the lobby into the version of the lobby that presents options
                     //to registered users.
                     $("#idnum").attr('value', data.idnum);
-                    $("#join").remove()
 
-                    var editForm = document.createElement("form");
-                    editForm.id = "edit";
+                    $("#join").detach()
 
-                    var editText = document.createElement("input");
-                    editText.type = "text";
-                    editText.id = "username";
-                    editText.placeholder = "Username";
+                    $("#formoptions").append(editform);
+                    $(editform).on('submit', edit_handler);
 
-                    var editButton = document.createElement("input");
-                    editButton.type = "submit";
-                    editButton.value = "Change Username";
+                    $("#formoptions").append(voteform);
+                    //$(voteform).on('submit', vote_handler);
 
-                    editForm.appendChild(editText)
-                    editForm.appendChild(editButton);
-
-                    var voteForm = document.createElement("form");
-                    voteForm.id = "vote";
-
-                    var voteButton = document.createElement("input");
-                    voteButton.type = "submit";
-                    voteButton.value = "Change Start Vote";
-
-                    voteForm.appendChild(voteButton);
-
-                    var leaveForm = document.createElement("form");
-                    leaveForm.id = "leave";
-
-                    var leaveButton = document.createElement("input");
-                    leaveButton.type = "submit";
-                    leaveButton.value = "Leave Game";
-
-                    leaveForm.appendChild(leaveButton);
-
-                    $("#formoptions").append(editForm);
-                    $("#formoptions").append(voteForm);
-                    $("#formoptions").append(leaveForm);
+                    $("#formoptions").append(leaveform);
+                    $(leaveform).on('submit', leave_handler);
 
                     long_poll();
 
@@ -124,25 +119,14 @@
                     //to join and view the list of active players.
                     $("#idnum").attr('value', '');
 
-                    $("#vote").remove();
-                    $("#leave").remove();
+                    $("#edit").detach();
+                    $("#vote").detach();
+                    $("#leave").detach();
 
-                    var joinForm = document.createElement("form");
-                    joinForm.id = "join";
+                    $("#formoptions").append(joinform);
+                    $(leaveform).on('submit', join_handler);
 
-                    var joinText = document.createElement("input");
-                    joinText.type = "text";
-                    joinText.id = "username";
-                    joinText.placeholder = "Username";
-
-                    var editButton = document.createElement("input");
-                    joinButton.type = "submit";
-                    joinButton.value = "Join Game";
-
-                    joinForm.appendChild(joinText)
-                    joinForm.appendChild(joinButton);
-
-                    $("#formoptions").append(joinForm);
+                    long_poll();
 
                     return false;
                 }
@@ -172,6 +156,16 @@
             <form id="join">
                 <input type="text" id="username" placeholder="Username"/>
                 <input type="submit" value="Join Game" id="submitbutton" />
+            </form>
+            <form id="edit">
+                <input type="text" id="username" placeholder="Username"/>
+                <input type="submit" value="Change Username" id="submitbutton" />
+            </form>
+            <form id="vote">
+                <input type="submit" value="Change Start Vote" id="submitbutton" />
+            </form>
+            <form id="leave">
+                <input type="submit" value="Leave Game" id="submitbutton" />
             </form>
         </div>
         <div>
