@@ -12,7 +12,7 @@
 
                 //Immediately detach the form elements needed for registered
                 //players from the DOM.
-                var joinform = $("#join")
+                var joinform = $("#join");
                 var editform = $("#edit").detach();
                 var voteform = $("#vote").detach();
                 var leaveform = $("#leave").detach();
@@ -55,13 +55,14 @@
                 }
 
                 function vote_handler(e) {
+                    alert($("#idnum").val());
                     $.ajax({
                         type: 'POST',
-                        url: '/lobby/leave',
+                        url: '/lobby/vote',
                         timeout: 10000,
                         dataType: 'json',
                         data: {'idnum': $("#idnum").val()},
-                        success: lobby_leave
+                        success: lobby_update
                     });
                     return false;
                 }
@@ -104,7 +105,7 @@
                     $(editform).on('submit', edit_handler);
 
                     $("#formoptions").append(voteform);
-                    //$(voteform).on('submit', vote_handler);
+                    $(voteform).on('submit', vote_handler);
 
                     $("#formoptions").append(leaveform);
                     $(leaveform).on('submit', leave_handler);

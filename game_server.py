@@ -82,6 +82,7 @@ class GameRoomServer(object):
             (r'^lobby/join$', self.lobby_join),
             (r'^lobby/vote$', self.lobby_vote),
             (r'^lobby/edit$', self.lobby_edit),
+            (r'^lobby/leave$', self.lobby_leave),
             (r'^lobby/update$', self.lobby_update),
             (r'^game$', self.game_room),
         ]
@@ -224,6 +225,11 @@ class GameRoomServer(object):
         """
         self.users[idnum][0] = username
         return self.lobby_update(idnum=idnum)
+
+    def lobby_leave(self, idnum=None, **kwargs):
+        """Allows the user with the given id number to leave the game."""
+        del self.users[idnum]
+        return self.lobby_update()
 
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>", None
