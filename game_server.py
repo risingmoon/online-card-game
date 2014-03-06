@@ -1,6 +1,7 @@
 from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
 from urlparse import parse_qs
+import json
 import re
 
 
@@ -29,9 +30,6 @@ class GameRoomServer(object):
     def __call__(self, environ, start_response):
         """When called, the GameRoomServer class behaves as a dispatcher."""
 
-        #import pdb; pdb.set_trace()
-
-        headers = [("Content-type", "text/html")]
         try:
             path = environ.get('PATH_INFO', None)
             if path is None:
@@ -56,25 +54,19 @@ class GameRoomServer(object):
             if arg:
                 kwargs['idnum'] = str(arg)
 
-            body, header = func(**kwargs)
+            headers, status, body = func(**kwargs)
 
         except NameError:
+            headers = [("Content-type", "text/html")]
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
-            header = None
 
         except Exception:
+            headers = [("Content-type", "text/html")]
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
-            header = None
 
         finally:
-            if header:
-                status = "301 Redirect"
-                headers.append(header)
-            else:
-                status = "200 OK"
-
             headers.append(('Content-length', str(len(body))))
             start_response(status, headers)
             return [body]
@@ -131,9 +123,14 @@ class GameRoomServer(object):
         """
 
         if self.in_game:
-            return self.game_room_redirect()
+            return [("Content-type", "text/html"),
+                    ("Location", "%s/game" % self.base_url)], \
+                "301 Redirect", ''
         else:
-            return self.login()
+            return [("Content-type", "text/html"),
+                    ("Location", "%s/lobby" % self.base_url)], \
+                "301 Redirect", ''
+            #return self.login()
 
     def login(self, **kwargs):
         page = """
@@ -149,94 +146,48 @@ class GameRoomServer(object):
         """
         return (page, None)
 
-    def lobby(self, idnum=None, **kwargs):
-        """Builds the html for the lobby. If an id number is given, the
-        user gets back a version that is tailored to that id number. If
-        not, the player gets a version of the page that allows them only
-        to join and view the list of players.
+    def update_lobby(self, idnum=None, **kwargs):
+        """Builds a json object containing information on the lobby that
+        is sent to the user when their browser long polls or when they
+        complete any operation that changes the state of the lobby. If
+        in_game has become true since the last time this function was
+        called, the json object returned instructs the javascript on the
+        user's lobby page to redirect them to the game.
+        """
+        if self.in_game:
+            info = {'redirect': "/game/%s" % idnum}
+
+        else:
+            userdata = []
+
+            if idnum:
+                userdata.append(self.users[idnum])
+
+            for userid in sorted(self.users):
+                if userid == idnum:
+                    continue
+                userdata.append(self.users[userid])
+
+            info = {'users': userdata}
+
+        return [("Content-type", "application/json")], \
+            "200 OK", json.dumps(info)
+
+    def lobby(self, **kwargs):
+        """Answer the user's initial lobby request by reading the lobby
+        html and serving it to them.
         """
 
-        page = """
-<center>
-    <h1>Lobby</h1>"""
+        with open('static/lobby.html') as infile:
+            page = infile.read()
 
-        #If this player has an id number, they get forms that allow them
-        #to change their username and toggle their vote. The forms also
-        #contain a hidden input that keeps track of their id number.
-        if idnum:
-            page += """
-    <div>
-        <form method="POST" action="/lobby/edit">
-            <input type="text" name="username" value="%s"/>
-            <input type="submit" value="Change Username" />
-            <input type="hidden" name="idnum" value="%s" />
-        </form>
-        <form method="POST" action="/lobby/vote">
-            <input type="submit" value="Change Vote" />
-            <input type="hidden" name="idnum" value="%s" />
-        </form>
-    </div>""" % (self.users[idnum][0], idnum, idnum)
-
-        #Otherwise, the player gets a form that allows them to join the
-        #game. No hidden input with id is included: the game is not keeping
-        #track of them yet.
-        else:
-            page += """
-    <div>
-        <form method="POST" action="/lobby/join">
-            <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" value="Join" />
-        </form>
-    </div>"""
-
-        page += """
-    <table>
-        <tr>
-            <td>Players</td>
-            <td>Vote</td>
-        </tr>"""
-
-        #If the lobby is being accessed by a user with an ID number, format
-        #the lobby so that their username, labeled, appears at the top of
-        #the list of players.
-        if idnum:
-            page += """
-        <tr>
-            <td>{0} (You)</td>
-            <td>{1}</td>
-        </tr>""".format(*self.users[idnum])
-
-        for userid in sorted(self.users):
-            if userid == idnum:
-                continue
-
-            page += """
-        <tr>
-            <td>{0}</td>
-            <td>{1}</td>
-        </tr>""".format(*self.users[userid])
-
-        page += """
-    </table>
-    <form method="POST" action="/lobby%s">
-        <input type="submit" value="Update" />
-    </form>
-</center>""" % (('/%s' % idnum) if idnum else '')
-
-        return (page, None)
-
-    def lobby_redirect(self, idnum=None, **kwargs):
-        """Redirect the player to the lobby."""
-
-        if idnum:
-            return ('', ('Location', "%s/lobby/%s" % (self.base_url, idnum)))
-        else:
-            return ('', ('Location', "%s/lobby" % self.base_url))
+        return [("Content-type", "text/html")], "200 OK", page
 
     def lobby_join(self, username="Player", **kwargs):
         """Allows the player to join the game in the lobby. Adds their new
-        username and id to the game server object, then returns a redirect
-        to a version of the lobby page that is tailored to that id.
+        username and id to the game server object, then calls update_lobby
+        to fetch and return a json object containing the new information
+        about the lobby.
         """
 
         idnum = str(self.next_id)
@@ -244,16 +195,15 @@ class GameRoomServer(object):
 
         self.users[idnum] = [username, 'No']
 
-        return self.lobby_redirect(idnum=idnum)
+        return self.update_lobby(idnum=idnum)
 
     def lobby_vote(self, idnum=None, **kwargs):
-        """Function called when the player toggles their start vote in the
-        lobby. If all players have voted to start, it returns a redirect
-        to the game room and changes the status of the game server object
-        to reflect that we're now ingame. Otherwise, it returns a redirect
-        to a version of the lobby that reflects the changed vote.
+        """Function called when the player toggles their start vote in
+        the lobby. It toggles their vote, then checks to see whether all
+        players have voted, setting self.in_game if so. update_lobby is
+        then called either to reflect their changed vote or to redirect
+        them to the game room if all players have voted.
         """
-
         self.users[idnum][1] = \
             'Yes' if (self.users[idnum][1] == 'No') else 'No'
 
@@ -265,27 +215,18 @@ class GameRoomServer(object):
 
         if votecheck:
             self.in_game = True
-            return self.game_room_redirect(idnum=idnum)
-        else:
-            return self.lobby_redirect(idnum=idnum)
+
+        return self.update_lobby(idnum=idnum)
 
     def lobby_edit(self, idnum=None, username="Player", **kwargs):
-        """Allows the user with the given id number to change their username
-        to the username passed in.
+        """Allows the user with the given id number to change their
+        username to the username passed in.
         """
-
         self.users[idnum][0] = username
-        return self.lobby_redirect(idnum=idnum)
+        return self.update_lobby(idnum=idnum)
 
     def game_room(self, idnum=None, **kwargs):
         return "<h1>We are in-game.</h1>", None
-
-    def game_room_redirect(self, idnum=None, **kwargs):
-        """Redirect the player to the game room."""
-        if idnum:
-            return ('', ('Location', "%s/game/%s" % (self.base_url, idnum)))
-        else:
-            return ('', ('Location', "%s/game" % self.base_url))
 
 
 if __name__ == '__main__':
