@@ -111,8 +111,14 @@ class Game(object):
             'small_blind': self._get_next_player(self.dealer),
             'big_blind': self._get_next_player(self.dealer, 2),
             'pot': self.pot,
-            'community': self.community,
         }
+
+        community = []
+
+        for card in self.community:
+            community.append([card.value, card.suit, card.string])
+
+        info.update({'community': community})
 
         players = []
 
