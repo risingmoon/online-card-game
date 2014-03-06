@@ -38,13 +38,12 @@ class Game(object):
     #a version of the room tailored to them.
 
     def add_player(self, name):
-        """Create a new Player object and add it to the game. Return a
-        reference to the Player object just created.
+        """Create a new Player object and add it to the game. Return the
+        index in self.players_list of the player just created.
         """
         self.players_size += 1
-        new_player = Player(name)
-        self.players_list.append(new_player)
-        return new_player
+        self.players_list.append(Player(name))
+        return self.players_size - 1
 
     def remove_player(self, name):
         pass

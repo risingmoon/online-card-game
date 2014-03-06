@@ -220,6 +220,10 @@ class GameRoomServer(object):
 
         if votecheck:
             self.in_game = True
+            for userid in sorted(self.users):
+                self.users[userid].append(
+                    game.addPlayer(self.users[userid][0])
+                )
 
         return self.lobby_update(idnum=idnum)
 
@@ -244,14 +248,28 @@ class GameRoomServer(object):
             json.dumps(game.poll_game(player=self.users[idnum][2]))
 
     def game_room(self, idnum=None, **kwargs):
-        return [("Content-type", "text/html")], "200 OK", \
-            "<h1>We are in-game.</h1>"
+        """Read in and serve the game room HTML."""
+        # with open('static/game.html') as infile:
+        with open('game.html') as infile:
+            page = infile.read()
+
+        return [("Content-type", "text/html")], "200 OK", page
 
     def game_room_call(self, idnum=None, bet=0):
-        pass
+        """Function called when the player places a bet (whether it be a
+        call or a raise).
+        """
+        game.update_game(bet=
+            game.players_list(self.users[idnum][2]).bet(bet))
+
+        return self.game_room_update(idnum=idnum)
 
     def game_room_fold(self, idnum=None):
-        pass
+        """Function called when the player folds."""
+        game.update_game(fold=
+            game.players_list(self.users[idnum][2]).fold())
+
+        return self.game_room_update(idnum=idnum)
 
 
 if __name__ == '__main__':
