@@ -176,7 +176,6 @@ class GameRoomServer(object):
         """Answer the user's initial lobby request by reading the lobby
         html and serving it to them.
         """
-
         # with open('static/lobby.html') as infile:
         with open('lobby.html') as infile:
             page = infile.read()
@@ -189,7 +188,6 @@ class GameRoomServer(object):
         to fetch and return a json object containing the new information
         about the lobby.
         """
-
         idnum = str(self.next_id)
         self.next_id += 1
 

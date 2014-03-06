@@ -10,12 +10,40 @@
         <script>
             $(document).ready(function() {
 
+                $("#join").submit(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/join',
+                        dataType: 'json',
+                        data: {'username': $("#username").val()},
+                        success: lobby_update
+                    });
+                    return false;
+                });
+
                 function lobby_update(data) {
                     var json_data = jQuery.parseJSON(data);
                     $("#updatelabel").remove();
-                    $("#players").empty("#playerdata");
+                    $("#players").empty();
 
-                    //for(i = 0; i < )
+                    for(i = 0; i < data.users.length; i++) {
+                        var node = document.createElement("tr");
+                        node.id = "playerdata";
+
+                        var playerName = data.users[i][0];
+                        var playerVote = data.users[i][1];
+
+                        var nameField = document.createElement("td");
+                        nameField.appendChild(document.createTextNode(playerName));
+
+                        var voteField = document.createElement("td");
+                        voteField.appendChild(document.createTextNode(playerVote));
+
+                        node.appendChild(nameField);
+                        node.appendChild(voteField);
+
+                        $("#players").append(node);
+                    }
                 }
 
                 function long_poll() {
@@ -28,34 +56,39 @@
                         dataType: 'json',
                         success: lobby_update
                     });
-                };
+                }
 
+                //long_poll();
                 setInterval(long_poll, 10000);
-
-            })
+            });
         </script>
     </head>
 
     <body>
         <h1>Lobby</h1>
-        <div>
-            <form id="join" method="POST" action="/lobby/join">
-                <input type="text" name="username" placeholder="Username"/>
+        <div id="formoptions">
+            <form id="join">
+                <input type="text" id="username" placeholder="Username"/>
                 <input type="submit" value="Join" />
             </form>
         </div>
-        <div id="players">
+        <div>
             <table>
-                <tr>
-                    <td>Players</td>
-                    <td>Vote</td>
-                </tr>
+                <thead>
+                    <tr>
+                        <th>Players</th>
+                        <th>Vote</th>
+                    </tr>
+                </thead>
+                <tbody id="players">
+                </tbody>
             </table>
             <p id="updatelabel">Updating...</p>
         </div>
     </body>
 </html>
 
+<!--
     <body>
         <h1>Lobby</h1>
         <div>
@@ -91,3 +124,4 @@
         </form>
     </body>
 </html>
+-->
