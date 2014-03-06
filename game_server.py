@@ -49,13 +49,14 @@ class GameRoomServer(object):
                 kwargs[key] = val[0]
 
             func, arg = self._resolve_path(path)
-
+            print "mapped url to function"
             #Overwrite idnum argument with corresponding argument parsed
             #out of the url, if present.
             if arg:
                 kwargs['idnum'] = str(arg)
 
             headers, status, body = func(**kwargs)
+            print "returned from function"
 
         except NameError:
             headers = [("Content-type", "text/html")]
@@ -86,6 +87,7 @@ class GameRoomServer(object):
             (r'^lobby/leave$', self.lobby_leave),
             (r'^lobby/update$', self.lobby_update),
             (r'^game$', self.game_room),
+            (r'^game/(\d+)$', self.game_room),
             (r'^game/call$', self.game_room_call),
             (r'^game/fold$', self.game_room_fold),
             (r'^game/update$', self.game_room_update),
@@ -224,6 +226,7 @@ class GameRoomServer(object):
                 self.users[userid].append(
                     game.add_player(self.users[userid][0])
                 )
+                print "added user with index %s" % self.users[userid][2]
 
         return self.lobby_update(idnum=idnum)
 
@@ -244,8 +247,9 @@ class GameRoomServer(object):
         the game. If an id number is passed, it's specific to the game
         from their perspective.
         """
+        import pdb; pdb.set_trace()
         return [("Content-type", "application/json")], "200 OK", \
-            json.dumps(game.poll_game(player=self.users[idnum][2]))
+            json.dumps(self.game.poll_game(player=self.users[idnum][2]))
 
     def game_room(self, idnum=None, **kwargs):
         """Read in and serve the game room HTML."""
@@ -260,14 +264,14 @@ class GameRoomServer(object):
         call or a raise).
         """
         game.update_game(bet=
-            game.players_list(self.users[idnum][2]).bet(bet))
+            self.game.players_list(self.users[idnum][2]).bet(bet))
 
         return self.game_room_update(idnum=idnum)
 
     def game_room_fold(self, idnum=None):
         """Function called when the player folds."""
         game.update_game(fold=
-            game.players_list(self.users[idnum][2]).fold())
+            self.game.players_list(self.users[idnum][2]).fold())
 
         return self.game_room_update(idnum=idnum)
 
