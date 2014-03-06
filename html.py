@@ -2,6 +2,9 @@ from gevent.pywsgi import WSGIServer
 from gevent.monkey import patch_all
 from urlparse import parse_qs
 import re
+from jinja2 import Environment, FileSystemLoader, Template
+env = Environment(loader=FileSystemLoader('templates'))
+template = env.get_template('lobby.html')
 
 
 class GameRoomServer(object):
@@ -134,9 +137,10 @@ class GameRoomServer(object):
             return self.login()
 
     def login(self):
-        with open("login.html", 'r') as infile:
+        with open("templates/login.html", 'r') as infile:
             page = infile.read()
         return (page, None)
+
 
     def lobby(self, idnum=None, **kwargs):
         """Builds the html for the lobby. If an id number is given, the
@@ -144,75 +148,13 @@ class GameRoomServer(object):
         not, the player gets a version of the page that allows them only
         to join and view the list of players.
         """
-
-        page = """
-<center>
-    <h1>Lobby</h1>"""
-
-        #If this player has an id number, they get forms that allow them
-        #to change their username and toggle their vote. The forms also
-        #contain a hidden input that keeps track of their id number.
-        if idnum:
-            page += """
-    <div>
-        <form method="POST" action="/lobby/edit">
-            <input type="text" name="username" value="%s"/>
-            <input type="submit" value="Change Username" />
-            <input type="hidden" name="idnum" value="%s" />
-        </form>
-        <form method="POST" action="/lobby/vote">
-            <input type="submit" value="Change Vote" />
-            <input type="hidden" name="idnum" value="%s" />
-        </form>
-    </div>""" % (self.users[idnum][0], idnum, idnum)
-
-        #Otherwise, the player gets a form that allows them to join the
-        #game. No hidden input with id is included: the game is not keeping
-        #track of them yet.
-        else:
-            page += """
-    <div>
-        <form method="POST" action="/lobby/join">
-            <input type="text" name="username" placeholder="Username"/>
-            <input type="submit" value="Join" />
-        </form>
-    </div>"""
-
-        page += """
-    <table>
-        <tr>
-            <td>Players</td>
-            <td>Vote</td>
-        </tr>"""
-
-        #If the lobby is being accessed by a user with an ID number, format
-        #the lobby so that their username, labeled, appears at the top of
-        #the list of players.
-        if idnum:
-            page += """
-        <tr>
-            <td>{0} (You)</td>
-            <td>{1}</td>
-        </tr>""".format(*self.users[idnum])
-
-        for userid in sorted(self.users):
-            if userid == idnum:
-                continue
-
-            page += """
-        <tr>
-            <td>{0}</td>
-            <td>{1}</td>
-        </tr>""".format(*self.users[userid])
-
-        page += """
-    </table>
-    <form method="POST" action="/lobby%s">
-        <input type="submit" value="Update" />
-    </form>
-</center>""" % (('/%s' % idnum) if idnum else '')
-
-        return (page, None)
+        # with open("lobby.html", 'r') as infile:
+        #     page = infile.read()
+        # players = ['Justin']
+        # page.format(players)
+        # return (page, None)
+        page = template.render(players=['Justin','Matt', "Cris"])
+        return (page.encode('utf-8'),None)
 
     def lobby_redirect(self, idnum=None, **kwargs):
         """Redirect the player to the lobby."""
