@@ -44,17 +44,15 @@ class Game:
     #a version of the room tailored to them.
 
     def add_player(self, name):
-        """Create a new Player object and add it to the game. Return a
-        reference to the Player object just created.
+        """Create a new Player object and add it to the game. Return the
+        index in self.players_list of the player just created.
         """
         self.players_size += 1
-        new_player = Player(name)
-        self.players_list.append(new_player)
-        return new_player
+        self.players_list.append(Player(name))
+        return self.players_size - 1
 
     def remove_player(self, index):
         self.players_size -= 1
-        self.players_list.pop(index)
 
     def initialize_game(self):
         """When called, we allocate to each player a beginning number of
@@ -140,6 +138,13 @@ class Game:
             'pot': self.pot,
         }
 
+        community = []
+
+        for card in self.common_cards:
+            community.append([card.value, card.suit, card.string])
+
+        info.update({'community': community})
+
         players = []
 
         if player is not None:
@@ -149,25 +154,31 @@ class Game:
             #on their game screen.
             for other_player in self.players_list[player + 1:] + \
                     self.players_list[:player]:
-                players.append({
-                    'name': other_player.name,
-                    'bet': other_player.bet,
-                    'points': other_player.points,
-                    'active': other_player.active,
-                })
+                players.append([
+                    other_player.name,
+                    other_player.bet,
+                    other_player.points,
+                    other_player.active,
+                ])
 
             info.update({
                 'turn': True if player == self.current_player else False,
                 'dealer': True if player == info['dealer'] else False,
                 'small_blind': True if player == info['small_blind'] else False,
                 'big_blind': True if player == info['big_blind'] else False,
-                'hand': self.players_list[player].hand,
                 'points': self.players_list[player].points,
                 'bet': self.players_list[player].bet,
                 'active': self.players_list[player].active,
                 'name': self.players_list[player].name,
                 'players': players,
             })
+
+            hand = []
+            for card in self.players_list[player].hand:
+                hand.append([card.value, card.suit, card.string])
+
+            info.update({'hand': hand})
+
         else:
             #If a spectator is making this request, return a minimal amount
             #of information on all players.
@@ -181,6 +192,8 @@ class Game:
 
             info.update({'players': players})
 
+        return info
+
     def _initialize_round(self, dealer=None):
         """Assign one player the role of dealer and the next two players
         the roles of small blind and big blind. If the "dealer" argument
@@ -189,6 +202,7 @@ class Game:
         NEXT player the role of dealer. The small blind and big blind are
         made to place their bets.
         """
+
         # Initialize a new deck object for each round
         self.deck = Deck()
         self.round_done = False
@@ -229,6 +243,7 @@ class Game:
             self.small_blind_points)
         self.pot += self.players_list[big_blind].call(
             self.big_blind_points)
+
         self.min_bet = self.big_blind_points
         #Will eventually need to check that these players have enough
         #points to place the bet.
@@ -272,7 +287,6 @@ class Game:
         Determines a winner in the showdown (if applicable) and gives the
         pot to the winner.
         """
-
         # Find and save best hand for active each player, while keeping
         # track of the overall best hand
 
