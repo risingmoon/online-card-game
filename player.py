@@ -14,6 +14,7 @@ class Player:
 
     def call(self, points, subpot=None):
         """Place a bet. Might consider renaming this function."""
+        points = int(points)
         if points >= self.points:
             points = self.points
             self.all_in = True
