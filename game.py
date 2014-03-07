@@ -113,7 +113,6 @@ class Game:
         #betting cycle. An exception is made for the first round of
         #betting, in which case the player who bet the big blind gets
         #an opportunity to raise or check.
-        import pdb; pdb.set_trace()
         if self.last_raise == self.current_player:
             if (
                 self.current_player == self._get_next_player(self.dealer, 2)
