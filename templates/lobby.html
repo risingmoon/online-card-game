@@ -2,7 +2,8 @@
     <head>
         <meta charset="utf-8">
         <title></title>
-        <link rel="stylesheet" href="css/bootstrap.css">
+        <link rel="stylesheet" href="../static/css/bootstrap.css">
+        <link rel="stylesheet" href="../static/css/signin.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
         <!--script src="js/vendor/modernizr-2.6.2.min.js"></script-->
 
@@ -77,11 +78,17 @@
 
                         for(i = 0; i < data.users.length; i++) {
                             var node = document.createElement("tr");
+                            node.className = "row"
                             node.id = "playerdata";
 
                             var playerName = data.users[i][0];
                             var playerVote = data.users[i][1];
-
+                            
+                            if (playerVote=="Yes") {
+                                node.className = "row success"
+                            } else {
+                                node.className = "row danger"
+                            }
                             if($("#idnum").val() && i == 0) {
                                 playerName += ' (You)';
                             }
@@ -158,36 +165,50 @@
     </head>
 
     <body>
-        <h1>Lobby</h1>
-        <div id="formoptions">
-            <input type="hidden" id="idnum" value="" />
-            <form id="join">
+        <div class="container form-signin">
+
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h1 class="panel-title">Texas Holden Lobby</h1>
+                </div>
+                <div class="panel-body">
+                <div>
+                    <table class="table">
+                        <thead>
+                            <tr class="row">
+                                <th>Players</th>
+                                <th>Vote</th>
+                            </tr>
+                        </thead>
+                        <tbody id="players">
+                        </tbody>
+                    </table>
+                    <p id="updatelabel">Updating...</p>
+                </div>
+
+                <div  id="formoptions">
+                <input type="hidden" id="idnum" value="" />
+                
+                <form id="join">
                 <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Join Game" id="submitbutton" />
-            </form>
-            <form id="edit">
+                <button type="submit" class="btn btn-default">Join</button>
+                </form>
+
+                <form id="edit">
                 <input type="text" id="username" placeholder="Username"/>
-                <input type="submit" value="Change Username" id="submitbutton" />
-            </form>
-            <form id="vote">
-                <input type="submit" value="Change Start Vote" id="submitbutton" />
-            </form>
-            <form id="leave">
-                <input type="submit" value="Leave Game" id="submitbutton" />
-            </form>
-        </div>
-        <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Players</th>
-                        <th>Vote</th>
-                    </tr>
-                </thead>
-                <tbody id="players">
-                </tbody>
-            </table>
-            <p id="updatelabel">Updating...</p>
+                <button type="submit" class="btn btn-default">Edit</button>
+                </form>
+                
+                <form id="vote">
+                <button type="submit" class="btn btn-default">Toggle</button>
+                </form>
+                
+                <form id="leave">
+                <button type="submit" class="btn btn-default">Leave Game</button>
+                </form>
+            </div>
+
         </div>
     </body>
 </html>

@@ -170,7 +170,7 @@ class GameRoomServer(object):
         html and serving it to them.
         """
         # with open('static/lobby.html') as infile:
-        with open('lobby.html') as infile:
+        with open('templates/lobby.html') as infile:
             page = infile.read()
 
         return [("Content-type", "text/html")], "200 OK", page
@@ -251,15 +251,15 @@ class GameRoomServer(object):
         """
         bet = self.game.players_list[self.game.last_raise].bet
         bet -= self.game.players_list[self.users[idnum][2]].bet
-        self.game.update_game(bet=
-            self.game.players_list[self.users[idnum][2]].call(bet))
+        self.game.update_game(bet=self.game.players_list[
+                              self.users[idnum][2]].call(bet))
 
         return self.game_room_update(idnum=idnum)
 
     def game_room_fold(self, idnum=None):
         """Function called when the player folds."""
-        self.game.update_game(fold=
-            self.game.players_list[self.users[idnum][2]].fold())
+        self.game.update_game(fold=self.game.players_list[
+                              self.users[idnum][2]].fold())
 
         return self.game_room_update(idnum=idnum)
 
@@ -267,8 +267,8 @@ class GameRoomServer(object):
         """Function called when the player places a bet that raises the
         current bet.
         """
-        self.game.update_game(bet=
-            self.game.players_list[self.users[idnum][2]].call(bet))
+        self.game.update_game(bet=self.game.players_list[
+                              self.users[idnum][2]].call(bet))
 
         return self.game_room_update(idnum=idnum)
 

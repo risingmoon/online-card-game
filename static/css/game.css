@@ -1,0 +1,34 @@
+body {
+    background: url("../images/12_bg_green.png") no-repeat;
+  background-size: 100% auto;
+}
+
+.table {
+    text-align: center;
+}
+
+img {
+    width: 80%;
+    display: inline;
+}
+
+#footer {
+  position: absolute;
+  bottom: 0;
+  width: 95%;
+  /* Set the fixed height of the footer here */
+}
+
+#header {
+  position: absolute;
+  top: 0;
+  width: 95%;
+  /* Set the fixed height of the footer here */
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+
+}
