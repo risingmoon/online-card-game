@@ -66,7 +66,7 @@
 
                 $("#raisebutton").on('click', raise_handler);
 
-                function game_update(data) {
+                function game_build(data) {
                     if(data.turn) {
                         $("#raisebutton").attr('disabled', false);
                         $("#foldbutton").attr('disabled', false);
@@ -91,21 +91,83 @@
 
                         var playerName = data.players[i][0];
                         var playerBet = data.players[i][1];
+                        var playerPoints = data.players[i][2];
 
                         var nameField = document.createElement("li");
                         nameField.className = "list-group-item";
+                        nameField.id = "name" + i;
                         nameField.appendChild(document.createTextNode(playerName));
 
                         var betField = document.createElement("li");
                         betField.className = "list-group-item";
+                        betField.id = "bet" + i;
                         betField.appendChild(document.createTextNode(playerBet));
+
+                        var pointsField = document.createElement("li");
+                        pointsField.className = "list-group-item";
+                        pointsField.id = "points" + i;
+                        pointsField.appendChild(document.createTextNode(playerPoints));
+
+                        var activeField = document.createElement("li");
+                        activeField.className = "list-group-item";
+                        activeField.id = "active" + i;
+                        activeField.appendChild(document.createTextNode("Active"));
 
                         list.appendChild(nameField);
                         list.appendChild(betField);
+                        list.appendChild(pointsField);
+                        list.appendChild(activeField);
 
                         node.appendChild(list);
 
                         $("#others").append(node);
+                    }
+
+                    $("#community").empty();
+
+                    $("#hand").empty();
+
+                    for(i = 0; i < data.hand.length; i++) {
+                        var card = document.createElement("div");
+                        card.className = "col-xs-6";
+                        var image = document.createElement("img");
+                        var imgname = data.hand[i][2].split(' ').join('-');
+                        image.src = "../static/images/" + imgname + ".png";
+
+                        card.appendChild(image);
+
+                        $("#hand").append(card);
+                    }
+                }
+
+                function game_update(data) {
+                    if(data.turn) {
+                        $("#raisebutton").attr('disabled', false);
+                        $("#foldbutton").attr('disabled', false);
+                        $("#callbutton").attr('disabled', false);
+                    } else {
+                        $("#raisebutton").attr('disabled', true);
+                        $("#foldbutton").attr('disabled', true);
+                        $("#callbutton").attr('disabled', true);
+                    }
+
+                    $("#betdisplay").text(data.bet);
+                    $("#pointdisplay").text(data.points);
+
+                    for(i = 0; i < data.players.length; i++) {
+                        var playerBet = data.players[i][1];
+                        var playerPoints = data.players[i][2];
+                        var playerStatus = data.players[i][3];
+
+                        $("#bet" + i).text(playerBet);
+                        $("#points" + i).text(playerPoints);
+
+                        if(playerStatus) {
+                            playerStatus = "Active";
+                        } else {
+                            playerStatus = "Folded";
+                        }
+                        $("#active" + i).text(playerStatus);
                     }
 
                     $("#community").empty();
@@ -142,6 +204,19 @@
                     }
                 }
 
+                function initial_poll() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/game/update',
+                        timeout: 10000,
+                        async: 'true',
+                        cache: 'false',
+                        data: {'idnum': $("#idnum").val()},
+                        dataType: 'json',
+                        success: game_build
+                    });
+                }
+
                 function long_poll() {
                     $.ajax({
                         type: 'POST',
@@ -155,7 +230,8 @@
                     });
                 }
 
-                long_poll();
+                initial_poll();
+                //long_poll();
                 setInterval(long_poll, 3000);
             });
         </script>
@@ -184,7 +260,7 @@
         </div>
       </div><!-- row -->
       <div class="container">
-      <div class="row" id="community">
+      <div class="row">
         <div class="col-xs-4">
              <table class="table" id="tracker">
                         <thead>
@@ -205,7 +281,7 @@
                         </tbody>
             </table>
         </div>
-        <div class="col-xs-4">
+        <div class="col-xs-4" id="community">
         <div class="col-xs-2">
             <img src="../static/images/table-holder2.png">
         </div>

@@ -149,13 +149,21 @@ class Game:
             #through the player on their right. Gather information about
             #the other players that this player needs to be able to see
             #on their game screen.
-            for other_player in self.players_list[player + 1:] + \
-                    self.players_list[:player]:
+            for other_player in range(len(self.players_list))[player + 1:] + \
+                    range(len(self.players_list[:player])):
                 players.append([
-                    other_player.name,
-                    other_player.bet,
-                    other_player.points,
-                    other_player.active,
+                    self.players_list[other_player].name,
+                    self.players_list[other_player].bet,
+                    self.players_list[other_player].points,
+                    self.players_list[other_player].active,
+                    True if self.players_list[other_player] ==
+                        self.current_player else False,
+                    True if self.players_list[other_player] ==
+                        info['dealer'] else False,
+                    True if self.players_list[other_player] ==
+                        info['small_blind'] else False,
+                    True if self.players_list[other_player] ==
+                        info['big_blind'] else False,
                 ])
 
             info.update({
