@@ -111,12 +111,11 @@
                     $("#community").empty();
 
                     for(i = 0; i < data.community.length; i++) {
-                        //update to determine card image
                         var card = document.createElement("div");
                         card.className = "col-xs-1 col-xs-offset-4";
 
                         var image = document.createElement("img");
-                        image.src = "../static/images/table-holder2.png";
+                        image.src = "../static/images/" + data.community[2] + ".png";
 
                         card.appendChild(image);
 
@@ -131,7 +130,7 @@
                         card.className = "col-xs-6";
 
                         var image = document.createElement("img");
-                        image.src = "../static/images/table-holder2.png";
+                        image.src = "../static/images/" + data.community[2] + ".png";
 
                         card.appendChild(image);
 
