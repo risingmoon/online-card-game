@@ -12,7 +12,7 @@ class Player:
         self.all_in = False
         self.hand = []
 
-    def call(self, points, subpot=None):
+    def call(self, points):
         """Place a bet. Might consider renaming this function."""
         points = int(points)
         if points >= self.points:

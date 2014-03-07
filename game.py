@@ -13,6 +13,10 @@ class Game:
         self.current_player = 0
 
         self.pot = 0
+        self.round_done = False
+        self.best_hand_string = ''
+        self.pot_won = 0
+        self.winner = ''
 
         self.current_cycle = 0
         self.end_of_first = 0  # To prevent skipping big blind player
@@ -25,8 +29,6 @@ class Game:
         self.deck = None
         self.common_cards = []
         self.evaluator = Evaluator()
-
-        self.done = False  # To be removed after command line testing
 
     #The game's API consists entirely of the next 4 (possibly 5) methods:
     #add_player, MAYBE remove_player, initialize_game, update_game, and
@@ -75,7 +77,7 @@ class Game:
         #invalid.
 
         #If only one active player remains.
-        if self._poll_active_players() == 1:
+        if self._poll_active_players() + self._poll_allin_players() == 1:
             self._end_round(
                 self._get_next_active_player(self.current_player))
 
@@ -89,12 +91,10 @@ class Game:
         #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
         if not fold:
-            if self.players_list[self.current_player].all_in:
-                pass
-            elif (
-                    self.players_list[self.current_player].bet <
+            if (self.players_list[self.current_player].bet <
                     self.players_list[self._get_previous_active_player(
-                    self.current_player)].bet):
+                    self.current_player)].bet
+                    and (not self.players_list[self.current_player].all_in)):
                 raise ValueError(
                     "Your bet must at least equal the previous player's.")
 
@@ -133,6 +133,9 @@ class Game:
             'small_blind': self._get_next_player(self.dealer),
             'big_blind': self._get_next_player(self.dealer, 2),
             'pot': self.pot,
+            'best_hand_string': self.best_hand_string,
+            'pot_won': self.pot_won,
+            'winner': self.winner,
         }
 
         community = []
@@ -210,6 +213,10 @@ class Game:
 
         # Initialize a new deck object for each round
         self.deck = Deck()
+        self.round_done = False
+        self.best_hand_string = ''
+        self.pot_won = 0
+        self.winner = ''
 
         #  Remove players without enough $ to play
         for index, player in enumerate(self.players_list):
@@ -293,7 +300,7 @@ class Game:
 
         best_rank = 7463  # Worst possible actual rank is 7462
         best_string = ''  # i.e. 'Full House' or 'Pair of Eights', etc.
-        best_cards = []  # Cards comprising the winning hand.
+        # best_cards = []  # Cards comprising the winning hand.
         Tie = False
 
         if winner is None:
@@ -310,7 +317,7 @@ class Game:
                         winners_tie = [winner]
                         best_rank = rank
                         best_string = string
-                        best_cards = cards
+                        # best_cards = cards
                     elif rank == best_rank:
                         Tie = True
                         winners_tie.append(index)
@@ -323,7 +330,7 @@ class Game:
         # If the winner was all in, they cannot win more than the pot amount
         # at the time of going all in.
         elif self.players_list[winner].all_in:
-            subpot = self._calculate_subpot(self.players_list[winner].bet)
+            subpot = self._get_subpot(self.players_list[winner].bet)
             self.players_list[winner].points += subpot
             self.pot -= subpot
             self.players_list[winner].all_in = False
@@ -333,9 +340,8 @@ class Game:
         else:
             self.players_list[winner].points += self.pot
 
-        #  For testing by running from command line.
-        self.done = True
-        self.best_string = best_string
+        self.round_done = True
+        self.best_hand_string = best_string
         self.pot_won = self.pot
         self.winner = self.players_list[winner].name
 
@@ -349,6 +355,15 @@ class Game:
                 active_players += 1
 
         return active_players
+
+    def _poll_allin_players(self):
+        """Find out how many players are all in, but not active."""
+        allin_players = 0
+        for player in self.players_list:
+            if player.all_in:
+                allin_players += 1
+
+        return allin_players
 
     def _get_next_active_player(self, index):
         """Get the next active player clockwise around the table from
@@ -414,6 +429,7 @@ class Game:
                 subpot += player.bet
             else:
                 subpot += bet
+        return subpot
 
 
 if __name__ == '__main__':
