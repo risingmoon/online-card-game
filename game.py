@@ -129,12 +129,12 @@ class Game(object):
             #on their game screen.
             for other_player in self.players_list[player + 1:] + \
                     self.players_list[:player]:
-                players.append({
-                    'name': other_player.name,
-                    'bet': other_player.bet,
-                    'points': other_player.points,
-                    'active': other_player.active,
-                })
+                players.append([
+                    other_player.name,
+                    other_player.bet,
+                    other_player.points,
+                    other_player.active,
+                ])
 
             info.update({
                 'turn': True if player == self.current_player else False,

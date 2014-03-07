@@ -27,6 +27,7 @@
 //PYTHON
 
                 function call_handler(e) {
+                    alert("call handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/call',
@@ -40,6 +41,7 @@
                 $("#callbutton").on('click', call_handler);
 
                 function fold_handler(e) {
+                    alert("fold handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/fold',
@@ -53,6 +55,7 @@
                 $("#foldbutton").on('click', fold_handler);
 
                 function raise_handler(e) {
+                    alert("raise handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/raise',
@@ -66,29 +69,38 @@
                 $("#raisebutton").on('click', raise_handler);
 
                 function game_update(data) {
-                    //$("#updatelabel").remove();
-                    $("#others").empty();
+                    alert(data.turn);
+                    if(data.turn) {
+                        $("#raisebutton").attr('disabled', false);
+                        $("#foldbutton").attr('disabled', false);
+                        $("#callbutton").attr('disabled', false);
+                    } else {
+                        $("#raisebutton").attr('disabled', true);
+                        $("#foldbutton").attr('disabled', true);
+                        $("#callbutton").attr('disabled', true);
+                    }
 
+                    $("#others").empty();
                     for(i = 0; i < data.players.length; i++) {
                         var node = document.createElement("div");
-                        node.class = "col-xs-4";
+                        node.className= "col-xs-4";
 
                         var list = document.createElement("ul");
-                        list.class = "list-group";
+                        list.className = "list-group";
 
-                        var playerName = data.players[i].name;
-                        var playerBet = data.players[i].bet;
+                        var playerName = data.players[i][0];
+                        var playerBet = data.players[i][1];
 
                         var nameField = document.createElement("li");
-                        nameField.class = "list-group-item";
+                        nameField.className = "list-group-item";
                         nameField.appendChild(document.createTextNode(playerName));
 
                         var betField = document.createElement("li");
-                        betField.class = "list-group-item";
-                        voteField.appendChild(document.createTextNode(playerBet));
+                        betField.className = "list-group-item";
+                        betField.appendChild(document.createTextNode(playerBet));
 
                         list.appendChild(nameField);
-                        list.appendChild(voteField);
+                        list.appendChild(betField);
 
                         node.appendChild(list);
 
@@ -98,8 +110,9 @@
                     $("#community").empty();
 
                     for(i = 0; i < data.community.length; i++) {
+                        //update to determine card image
                         var card = document.createElement("div");
-                        card.class = "col-xs-1 col-xs-offset-4";
+                        card.className = "col-xs-1 col-xs-offset-4";
 
                         var image = document.createElement("img");
                         img.src = "images/table-holder2.png";
@@ -112,8 +125,9 @@
                     $("#hand").empty();
 
                     for(i = 0; i < data.hand.length; i++) {
+                        //Update by determining proper card image
                         var card = document.createElement("div");
-                        card.class = "col-xs-6";
+                        card.className = "col-xs-6";
 
                         var image = document.createElement("img");
                         img.src = "images/table-holder2.png";
