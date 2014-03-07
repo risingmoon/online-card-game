@@ -61,7 +61,8 @@ class GameRoomServer(object):
             status = "404 Not Found"
             body = "<h1>Not Found</h1>"
 
-        except Exception:
+        except Exception as e:
+            import pdb; pdb.set_trace()
             headers = [("Content-type", "text/html")]
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
@@ -235,7 +236,7 @@ class GameRoomServer(object):
     def game_room(self, idnum=None, **kwargs):
         """Read in and serve the game room HTML."""
         # with open('static/game.html') as infile:
-        with open('game.html') as infile:
+        with open('templates/game.html') as infile:
             lines = infile.readlines()
             index = lines.index("//PYTHON\n")
             lines[index] = '$("#idnum").attr("value", %s);' % idnum
