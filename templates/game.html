@@ -28,7 +28,6 @@
 //PYTHON
 
                 function call_handler(e) {
-                    alert("call handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/call',
@@ -42,7 +41,6 @@
                 $("#callbutton").on('click', call_handler);
 
                 function fold_handler(e) {
-                    alert("fold handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/fold',
@@ -56,7 +54,6 @@
                 $("#foldbutton").on('click', fold_handler);
 
                 function raise_handler(e) {
-                    alert("raise handler")
                     $.ajax({
                         type: 'POST',
                         url: '/game/raise',
