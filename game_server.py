@@ -249,9 +249,9 @@ class GameRoomServer(object):
         bet.
         """
         bet = self.game.players_list[self.game.last_raise].bet
-        bet -= self.game.players_list[idnum].bet
+        bet -= self.game.players_list[self.users[idnum][2]].bet
         game.update_game(bet=
-            self.game.players_list(self.users[idnum][2]).bet(bet))
+            self.game.players_list(self.users[idnum][2]).call(bet))
 
         return self.game_room_update(idnum=idnum)
 
@@ -267,7 +267,7 @@ class GameRoomServer(object):
         current bet.
         """
         game.update_game(bet=
-            self.game.players_list(self.users[idnum][2]).bet(bet))
+            self.game.players_list(self.users[idnum][2]).call(bet))
 
         return self.game_room_update(idnum=idnum)
 
