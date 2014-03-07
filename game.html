@@ -69,7 +69,6 @@
                 $("#raisebutton").on('click', raise_handler);
 
                 function game_update(data) {
-                    alert(data.turn);
                     if(data.turn) {
                         $("#raisebutton").attr('disabled', false);
                         $("#foldbutton").attr('disabled', false);
@@ -79,6 +78,10 @@
                         $("#foldbutton").attr('disabled', true);
                         $("#callbutton").attr('disabled', true);
                     }
+
+                    $("#namedisplay").text(data.name);
+                    $("#betdisplay").text(data.bet);
+                    $("#pointdisplay").text(data.points);
 
                     $("#others").empty();
                     for(i = 0; i < data.players.length; i++) {
@@ -130,9 +133,9 @@
                         card.className = "col-xs-6";
 
                         var image = document.createElement("img");
-                        img.src = "images/table-holder2.png";
+                        image.src = "images/table-holder2.png";
 
-                        card.append(image);
+                        card.appendChild(image);
 
                         $("#hand").append(card);
                     }
@@ -210,7 +213,12 @@
             <img src="images/table-holder2.png">
             </div>
         </div>
-        <div class="col-xs-4">DATA
+        <div class="col-xs-4">
+            <p id="namedisplay">Username</p>
+            <p>Current Bet:</p>
+            <p id="betdisplay">bet</p>
+            <p>Points:</p>
+            <p id="pointdisplay">points</p>
         </div>
         <div class="col-xs-4">
             <p><button type="button" class="btn btn-default btn-lg btn-block" id="callbutton">Call</button></p>
