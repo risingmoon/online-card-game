@@ -77,7 +77,7 @@ class Game:
         #invalid.
 
         #If only one active player remains.
-        if self._poll_active_players() == 1:  # check all_in players here
+        if self._poll_active_players() + self._poll_allin_players() == 1:
             self._end_round(
                 self._get_next_active_player(self.current_player))
 
@@ -91,9 +91,6 @@ class Game:
         #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
         if not fold:
-            print(self.players_list[self.current_player].all_in)
-            print(self.players_list[self.current_player].bet)
-            print(self.players_list[self.current_player].points)
             if (self.players_list[self.current_player].bet <
                     self.players_list[self._get_previous_active_player(
                     self.current_player)].bet
@@ -136,6 +133,9 @@ class Game:
             'small_blind': self._get_next_player(self.dealer),
             'big_blind': self._get_next_player(self.dealer, 2),
             'pot': self.pot,
+            'best_hand_string': self.best_hand_string,
+            'pot_won': self.pot_won,
+            'winner': self.winner,
         }
 
         community = []
@@ -292,7 +292,7 @@ class Game:
 
         best_rank = 7463  # Worst possible actual rank is 7462
         best_string = ''  # i.e. 'Full House' or 'Pair of Eights', etc.
-        best_cards = []  # Cards comprising the winning hand.
+        # best_cards = []  # Cards comprising the winning hand.
         Tie = False
 
         if winner is None:
@@ -309,7 +309,7 @@ class Game:
                         winners_tie = [winner]
                         best_rank = rank
                         best_string = string
-                        best_cards = cards
+                        # best_cards = cards
                     elif rank == best_rank:
                         Tie = True
                         winners_tie.append(index)
@@ -322,7 +322,7 @@ class Game:
         # If the winner was all in, they cannot win more than the pot amount
         # at the time of going all in.
         elif self.players_list[winner].all_in:
-            subpot = self._calculate_subpot(self.players_list[winner].bet)
+            subpot = self._get_subpot(self.players_list[winner].bet)
             self.players_list[winner].points += subpot
             self.pot -= subpot
             self.players_list[winner].all_in = False
@@ -347,6 +347,15 @@ class Game:
                 active_players += 1
 
         return active_players
+
+    def _poll_allin_players(self):
+        """Find out how many players are all in, but not active."""
+        allin_players = 0
+        for player in self.players_list:
+            if player.all_in:
+                allin_players += 1
+
+        return allin_players
 
     def _get_next_active_player(self, index):
         """Get the next active player clockwise around the table from
@@ -412,6 +421,7 @@ class Game:
                 subpot += player.bet
             else:
                 subpot += bet
+        return subpot
 
 
 if __name__ == '__main__':
