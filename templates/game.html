@@ -81,6 +81,8 @@
                     $("#betdisplay").text(data.bet);
                     $("#pointdisplay").text(data.points);
 
+                    $("#tracker").empty();
+
                     $("#others").empty();
                     for(i = 0; i < data.players.length; i++) {
                         var node = document.createElement("div");
@@ -159,6 +161,10 @@
                         var playerPoints = data.players[i][2];
                         var playerStatus = data.players[i][3];
 
+                        if($("#bet" + i).text() != playerBet) {
+                            add_tracker_node(data.players[i][0] + "'s bet is now " + playerBet + " points.");
+                        }
+
                         $("#bet" + i).text(playerBet);
                         $("#points" + i).text(playerPoints);
 
@@ -167,6 +173,11 @@
                         } else {
                             playerStatus = "Folded";
                         }
+
+                        if($("#active" + i).text() != playerStatus && playerStatus == "Folded") {
+                            add_tracker_node(data.players[i][0] + " has folded.")
+                        }
+
                         $("#active" + i).text(playerStatus);
                     }
 
@@ -176,7 +187,6 @@
                         var card = document.createElement("div");
                         //card.className = "col-xs-1 col-xs-offset-4";
                         card.className = "col-xs-2";
-
 
                         var image = document.createElement("img");
                         var imgname = data.community[i][2].split(' ').join('-');
@@ -202,6 +212,18 @@
 
                         $("#hand").append(card);
                     }
+                }
+
+                function add_tracker_node(text) {
+                    var node = document.createElement("tr");
+                    node.className = "row";
+
+                    var data = document.createElement("td");
+                    data.appendChild(document.createTextNode(text));
+
+                    node.appendChild(data);
+
+                    $("#tracker").prepend(node);
                 }
 
                 function initial_poll() {
@@ -262,21 +284,21 @@
       <div class="container">
       <div class="row">
         <div class="col-xs-4">
-             <table class="table" id="tracker">
+             <table class="table">
                         <thead>
                             <tr class="row">
                                 <th>#</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="players">
+                        <tbody id="tracker">
                             <tr class="row">
-                                <th>1</th>
-                                <th>Action</th>
+                                <td>1</td>
+                                <td>Action</td>
                             </tr>
                             <tr class="row">
-                                <th>2</th>
-                                <th>Action</th>
+                                <td>2</td>
+                                <td>Action</td>
                             </tr>
                         </tbody>
             </table>

@@ -219,7 +219,7 @@ def provision_instance(wait_for_running=False,
     timeout_val = int(timeout)
     conn = get_ec2_connection()
     instance_type = 't1.micro'
-    key_name = 'poker'
+    key_name = 'pk-aws'
     security_group = 'ssh-access'
     image_id = 'ami-fa9cf1ca'
 
