@@ -62,7 +62,7 @@ class GameRoomServer(object):
             body = "<h1>Not Found</h1>"
 
         except Exception as e:
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             headers = [("Content-type", "text/html")]
             status = "500 Internal Server Error"
             body = "<h1>Internal Server Error</h1>"
