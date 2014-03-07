@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <link rel="stylesheet" href="css/bootstrap.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <!--script src="js/vendor/modernizr-2.6.2.min.js"></script-->
+
+        <!-- Here's our jQuery/Ajax stuff - including long polling. -->
+        <script>
+            $(document).ready(function() {
+
+                //Immediately detach the form elements needed for registered
+                //players from the DOM.
+                var joinform = $("#join");
+                var editform = $("#edit").detach();
+                var voteform = $("#vote").detach();
+                var leaveform = $("#leave").detach();
+
+                function join_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/join',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'username': $("#username").val()},
+                        success: lobby_join
+                    });
+                    return false;
+                }
+
+                function edit_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/edit',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'idnum': $("#idnum").val(), 'username': $("#username").val()},
+                        success: lobby_update
+                    });
+                    return false;
+                }
+
+                function leave_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/leave',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'idnum': $("#idnum").val()},
+                        success: lobby_leave
+                    });
+                    return false;
+                }
+
+                function vote_handler(e) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/vote',
+                        timeout: 10000,
+                        dataType: 'json',
+                        data: {'idnum': $("#idnum").val()},
+                        success: lobby_update
+                    });
+                    return false;
+                }
+
+                //Immediately tie the "join" form to its handler function
+                $("#join").on('submit', join_handler);
+
+                function lobby_update(data) {
+                    if(data.redirect) {
+                        window.location.replace('/game/' + $("#idnum").val());
+                    } else {
+                        $("#updatelabel").remove();
+                        $("#players").empty();
+
+                        for(i = 0; i < data.users.length; i++) {
+                            var node = document.createElement("tr");
+                            node.id = "playerdata";
+
+                            var playerName = data.users[i][0];
+                            var playerVote = data.users[i][1];
+
+                            if($("#idnum").val() && i == 0) {
+                                playerName += ' (You)';
+                            }
+
+                            var nameField = document.createElement("td");
+                            nameField.appendChild(document.createTextNode(playerName));
+
+                            var voteField = document.createElement("td");
+                            voteField.appendChild(document.createTextNode(playerVote));
+
+                            node.appendChild(nameField);
+                            node.appendChild(voteField);
+
+                            $("#players").append(node);
+                        }
+                    }
+                }
+
+                function lobby_join(data) {
+                    //Rebuilds the lobby into the version of the lobby that presents options
+                    //to registered users.
+                    $("#idnum").attr('value', data.idnum);
+
+                    $("#join").detach();
+
+                    $("#formoptions").append(editform);
+                    $(editform).on('submit', edit_handler);
+
+                    $("#formoptions").append(voteform);
+                    $(voteform).on('submit', vote_handler);
+
+                    $("#formoptions").append(leaveform);
+                    $(leaveform).on('submit', leave_handler);
+
+                    long_poll();
+
+                    return false;
+                }
+
+                function lobby_leave(data) {
+                    //Rebuilds the lobby into the version of the lobby that only allows players
+                    //to join and view the list of active players.
+                    $("#idnum").attr('value', '');
+
+                    $("#edit").detach();
+                    $("#vote").detach();
+                    $("#leave").detach();
+
+                    $("#formoptions").append(joinform);
+                    $(leaveform).on('submit', join_handler);
+
+                    long_poll();
+
+                    return false;
+                }
+
+                function long_poll() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/lobby/update',
+                        timeout: 10000,
+                        async: 'true',
+                        cache: 'false',
+                        data: {'idnum': $("#idnum").val()},
+                        dataType: 'json',
+                        success: lobby_update
+                    });
+                }
+
+                long_poll();
+                setInterval(long_poll, 3000);
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>Lobby</h1>
+        <div id="formoptions">
+            <input type="hidden" id="idnum" value="" />
+            <form id="join">
+                <input type="text" id="username" placeholder="Username"/>
+                <input type="submit" value="Join Game" id="submitbutton" />
+            </form>
+            <form id="edit">
+                <input type="text" id="username" placeholder="Username"/>
+                <input type="submit" value="Change Username" id="submitbutton" />
+            </form>
+            <form id="vote">
+                <input type="submit" value="Change Start Vote" id="submitbutton" />
+            </form>
+            <form id="leave">
+                <input type="submit" value="Leave Game" id="submitbutton" />
+            </form>
+        </div>
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Players</th>
+                        <th>Vote</th>
+                    </tr>
+                </thead>
+                <tbody id="players">
+                </tbody>
+            </table>
+            <p id="updatelabel">Updating...</p>
+        </div>
+    </body>
+</html>
+
+<!--
+    <body>
+        <h1>Lobby</h1>
+        <div>
+            <form id="edit" action="/lobby/edit">
+                <input type="text" name="username" value="%s"/>
+                <input type="submit" value="Change Username" />
+                <input type="hidden" name="idnum" value="%s" />
+            </form>
+            <form method="POST" action="/lobby/vote">
+                <input type="submit" value="Change Vote" />
+                <input type="hidden" name="idnum" value="%s" />
+            </form>
+        </div>
+        <div>
+            <form method="POST" action="/lobby/join">
+                <input type="text" name="username" placeholder="Username"/>
+                <input type="submit" value="Join" />
+            </form>
+        </div>
+
+        <table>
+            <tr>
+                <td>Players</td>
+                <td>Vote</td>
+            </tr>
+            <tr>
+                <td>{0}</td>
+                <td>{1}</td>
+            </tr>
+        </table>
+        <form method="POST" action="/lobby%s">
+            <input type="submit" value="Update" />
+        </form>
+    </body>
+</html>
+-->
