@@ -88,6 +88,7 @@ class GameRoomServer(object):
             (r'^game/(\d+)$', self.game_room),
             (r'^game/call$', self.game_room_call),
             (r'^game/fold$', self.game_room_fold),
+            (r'^game/raise$', self.game_room_raise),
             (r'^game/update$', self.game_room_update),
         ]
 
@@ -244,12 +245,14 @@ class GameRoomServer(object):
 
         return [("Content-type", "text/html")], "200 OK", page
 
-    def game_room_call(self, idnum=None, bet=0):
-        """Function called when the player places a bet (whether it be a
-        call or a raise).
+    def game_room_call(self, idnum=None):
+        """Function called when the player places a bet to match the current
+        bet.
         """
+        bet = self.game.players_list[self.game.last_raise].bet
+        bet -= self.game.players_list[self.users[idnum][2]].bet
         game.update_game(bet=
-            self.game.players_list(self.users[idnum][2]).bet(bet))
+            self.game.players_list(self.users[idnum][2]).call(bet))
 
         return self.game_room_update(idnum=idnum)
 
@@ -257,6 +260,15 @@ class GameRoomServer(object):
         """Function called when the player folds."""
         game.update_game(fold=
             self.game.players_list(self.users[idnum][2]).fold())
+
+        return self.game_room_update(idnum=idnum)
+
+    def game_room_raise(self, idnum=None, bet=0):
+        """Function called when the player places a bet that raises the
+        current bet.
+        """
+        game.update_game(bet=
+            self.game.players_list(self.users[idnum][2]).call(bet))
 
         return self.game_room_update(idnum=idnum)
 
