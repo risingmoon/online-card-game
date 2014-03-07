@@ -1,6 +1,5 @@
 fabfile.*
 *.py[cod]
-*~
 
 # C extensions
 *.so

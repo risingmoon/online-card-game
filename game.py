@@ -1,9 +1,9 @@
-
 from player import Player
 from deck import Deck
+from evaluator import Evaluator
 
 
-class Game(object):
+class Game:
     """A game of Texas Hold'em."""
     def __init__(self):
         self.players_size = 0
@@ -15,14 +15,18 @@ class Game(object):
         self.pot = 0
 
         self.current_cycle = 0
+        self.end_of_first = 0  # To prevent skipping big blind player
 
         self.min_bet = 0
         self.small_blind_points = 5
         self.big_blind_points = 10
-        self.initial_points = 100
+        self.initial_points = 200
 
-        self.deck = Deck()
-        self.community = []
+        self.deck = None
+        self.common_cards = []
+        self.evaluator = Evaluator()
+
+        self.done = False  # To be removed after command line testing
 
     #The game's API consists entirely of the next 4 (possibly 5) methods:
     #add_player, MAYBE remove_player, initialize_game, update_game, and
@@ -45,8 +49,8 @@ class Game(object):
         self.players_list.append(Player(name))
         return self.players_size - 1
 
-    def remove_player(self, name):
-        pass
+    def remove_player(self, index):
+        self.players_size -= 1
 
     def initialize_game(self):
         """When called, we allocate to each player a beginning number of
@@ -70,17 +74,27 @@ class Game(object):
         #made by the player & prompt them to redo if their actions were
         #invalid.
 
-        #If the player just folded and only one active player remains.
-        if fold and self._poll_active_players() == 1:
+        #If only one active player remains.
+        if self._poll_active_players() == 1:
             self._end_round(
                 self._get_next_active_player(self.current_player))
+
+        if self.end_of_first:
+            self.end_of_first = False
+            if bet == 0:
+                self._end_cycle()
+                return
 
         #Otherwise, the player just checked or placed a bet.
         #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
-        else:
-            if self.players_list[self.current_player].bet < self.players_list[
-                    self._get_previous_active_player(self.current_player)].bet:
+        if not fold:
+            if self.players_list[self.current_player].all_in:
+                pass
+            elif (
+                    self.players_list[self.current_player].bet <
+                    self.players_list[self._get_previous_active_player(
+                    self.current_player)].bet):
                 raise ValueError(
                     "Your bet must at least equal the previous player's.")
 
@@ -89,14 +103,22 @@ class Game(object):
             if self.players_list[self.current_player].bet > self.players_list[
                     self._get_previous_active_player(self.current_player)].bet:
                 self.last_raise = self.current_player
+                self.min_bet = self.players_list[self.current_player].bet
 
-            self.current_player = \
-                self._get_next_active_player(self.current_player)
+        self.current_player = \
+            self._get_next_active_player(self.current_player)
 
-            #If we have made it around the table to the last player who
-            #raised, and no additional raises have been made, end this
-            #betting cycle.
-            if self.last_raise == self.current_player:
+        #If we have made it around the table to the last player who
+        #raised, and no additional raises have been made, end this
+        #betting cycle. An exception is made for the first round of
+        #betting, in which case the player who bet the big blind gets
+        #an opportunity to raise or check.
+        if self.last_raise == self.current_player:
+            if (
+                self.current_player == self._get_next_player(self.dealer, 2)
+                    and self.current_cycle == 0):
+                self.end_of_first = True
+            else:
                 self._end_cycle()
 
     def poll_game(self, player=None):
@@ -115,7 +137,7 @@ class Game(object):
 
         community = []
 
-        for card in self.community:
+        for card in self.common_cards:
             community.append([card.value, card.suit, card.string])
 
         info.update({'community': community})
@@ -153,6 +175,7 @@ class Game(object):
                 hand.append([card.value, card.suit, card.string])
 
             info.update({'hand': hand})
+
         else:
             #If a spectator is making this request, return a minimal amount
             #of information on all players.
@@ -176,6 +199,15 @@ class Game(object):
         NEXT player the role of dealer. The small blind and big blind are
         made to place their bets.
         """
+
+        # Initialize a new deck object for each round
+        self.deck = Deck()
+
+        #  Remove players without enough $ to play
+        for index, player in enumerate(self.players_list):
+            if player.points < self.big_blind_points:
+                self.remove_player(index)
+
         #Determine who the dealer, small blind, big blind, and first turn
         #will be for the next round.
         if dealer is not None:
@@ -190,16 +222,12 @@ class Game(object):
 
         self.current_player = self._get_next_player(big_blind)
 
-        #Reset the deck and community cards.
-        self.community = []
-        self.deck.__init__()
-
         #Deal two cards to each player and reset their bets and active
         #status from the last round.
         for player in self.players_list:
             player.bet = 0
             player.active = True
-            player.hand = [self.deck.get_card() for i in range(2)]
+            player.hand = [self.deck.get_card(), self.deck.get_card()]
 
         #Reset the pot and force the small blind and big blind to place
         #their bets.
@@ -208,10 +236,13 @@ class Game(object):
             self.small_blind_points)
         self.pot += self.players_list[big_blind].call(
             self.big_blind_points)
+
+        self.min_bet = self.big_blind_points
         #Will eventually need to check that these players have enough
         #points to place the bet.
 
         self.current_cycle = 0
+        self.common_cards = []
 
     def _end_cycle(self):
         """Called when the current betting cycle has concluded. This
@@ -225,15 +256,21 @@ class Game(object):
 
         else:
             if self.current_cycle == 0:
-                #Deal out three cards (the flop)
-                self.community = [self.deck.get_card() for i in range(3)]
+                self.common_cards = [
+                    self.deck.get_card(),
+                    self.deck.get_card(),
+                    self.deck.get_card()
+                    ]
             else:
-                #Deal out one card (the turn or the river)
-                self.community.append(self.deck.get_card())
+                self.common_cards.append(self.deck.get_card())
 
             self.current_cycle += 1
+
+            # Sets current player to first active player left of the big blind.
             self.current_player = \
-                self._get_next_active_player(self.dealer)
+                self._get_next_active_player(
+                    self._get_next_player(self.dealer, 2))
+            self.last_raise = self.current_player
 
     def _end_round(self, winner=None):
         """Called when the current round ends - either when all players
@@ -243,12 +280,57 @@ class Game(object):
         Determines a winner in the showdown (if applicable) and gives the
         pot to the winner.
         """
-        if winner is None:
-            #The showdown happens here; hands are compared & a winner is
-            #determined.
-            pass
+        # Find and save best hand for active each player, while keeping
+        # track of the overall best hand
 
-        self.players_list[winner].points += self.pot
+        best_rank = 7463  # Worst possible actual rank is 7462
+        best_string = ''  # i.e. 'Full House' or 'Pair of Eights', etc.
+        best_cards = []  # Cards comprising the winning hand.
+        Tie = False
+
+        if winner is None:
+            for index, player in enumerate(self.players_list):
+                if player.active or player.all_in:
+                    seven_cards = []
+                    seven_cards.extend(self.common_cards)
+                    seven_cards.extend(player.hand)
+                    rank, string, cards = self.evaluator.get_best(seven_cards)
+                    if rank < best_rank:
+                        if Tie:
+                            Tie = False
+                        winner = index
+                        winners_tie = [winner]
+                        best_rank = rank
+                        best_string = string
+                        best_cards = cards
+                    elif rank == best_rank:
+                        Tie = True
+                        winners_tie.append(index)
+
+        if Tie:
+            split_pot = self.pot // len(winners_tie)
+            for player_index in winners_tie:
+                self.players_list[player_index].points += split_pot
+
+        # If the winner was all in, they cannot win more than the pot amount
+        # at the time of going all in.
+        elif self.players_list[winner].all_in:
+            subpot = self._calculate_subpot(self.players_list[winner].bet)
+            self.players_list[winner].points += subpot
+            self.pot -= subpot
+            self.players_list[winner].all_in = False
+            if self.pot > 0:
+                self._end_round()  # Find winner of remaining pot
+
+        else:
+            self.players_list[winner].points += self.pot
+
+        #  For testing by running from command line.
+        self.done = True
+        self.best_string = best_string
+        self.pot_won = self.pot
+        self.winner = self.players_list[winner].name
+
         self._initialize_round()
 
     def _poll_active_players(self):
@@ -316,6 +398,14 @@ class Game(object):
         while index < 0:
             index += self.players_size
         return index
+
+    def _get_subpot(self, bet):
+        subpot = 0
+        for player in self.players_list:
+            if bet >= player.bet:
+                subpot += player.bet
+            else:
+                subpot += bet
 
 
 if __name__ == '__main__':
