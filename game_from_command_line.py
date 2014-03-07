@@ -34,3 +34,6 @@ while True:
             the_game.winner + ' wins ' + str(the_game.pot_won) + ' with ' +
             the_game.best_string + '!')
         the_game.done = False
+
+    for player in the_game.players_list:
+        print(player.name + ': ' + str(player.points)+ ' bet: ' + str(player.bet))

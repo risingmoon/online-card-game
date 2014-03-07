@@ -50,8 +50,9 @@ class Game:
         self.players_list.append(new_player)
         return new_player
 
-    def remove_player(self, name):
-        pass
+    def remove_player(self, index):
+        self.players_size -= 1
+        self.players_list.pop(index)
 
     def initialize_game(self):
         """When called, we allocate to each player a beginning number of
@@ -90,8 +91,12 @@ class Game:
         #Need to check for when the player is able to check (as opposed
         #to when they're required to place a bet).
         if not fold:
-            if self.players_list[self.current_player].bet < self.players_list[
-                    self._get_previous_active_player(self.current_player)].bet:
+            if self.players_list[self.current_player].all_in:
+                pass
+            elif (
+                    self.players_list[self.current_player].bet <
+                    self.players_list[self._get_previous_active_player(
+                    self.current_player)].bet):
                 raise ValueError(
                     "Your bet must at least equal the previous player's.")
 
@@ -184,6 +189,11 @@ class Game:
         # Initialize a new deck object for each round
         self.deck = Deck()
 
+        #  Remove players without enough $ to play
+        for index, player in enumerate(self.players_list):
+            if player.points < self.big_blind_points:
+                self.remove_player(index)
+
         #Determine who the dealer, small blind, big blind, and first turn
         #will be for the next round.
         if dealer is not None:
@@ -266,7 +276,7 @@ class Game:
 
         if winner is None:
             for index, player in enumerate(self.players_list):
-                if player.active:
+                if player.active or player.all_in:
                     seven_cards = []
                     seven_cards.extend(self.common_cards)
                     seven_cards.extend(player.hand)
@@ -279,23 +289,27 @@ class Game:
                         best_rank = rank
                         best_string = string
                         best_cards = cards
-                    if rank == best_rank:
+                    elif rank == best_rank:
                         Tie = True
                         winners_tie.append(index)
-
-        # Here might be the place to output or set a message for displaying
-        # the winner of the round. "Player.name wins with Pair of Jacks"
 
         if Tie:
             split_pot = self.pot // len(winners_tie)
             for player_index in winners_tie:
                 self.players_list[player_index].points += split_pot
+
+        # If the winner was all in, they cannot win more than the pot amount
+        # at the time of going all in.
+        elif self.players_list[winner].all_in:
+            subpot = self._calculate_subpot(self.players_list[winner].bet)
+            self.players_list[winner].points += subpot
+            self.pot -= subpot
+            self.players_list[winner].all_in = False
+            if self.pot > 0:
+                self._end_round()  # Find winner of remaining pot
+
         else:
             self.players_list[winner].points += self.pot
-
-        #  Add iteration through players list to ensure each player has
-        #  points >= big_blind_amount. Remove the player from the game
-        #  if they do not.
 
         #  For testing by running from command line.
         self.done = True
@@ -370,6 +384,14 @@ class Game:
         while index < 0:
             index += self.players_size
         return index
+
+    def _get_subpot(self, bet):
+        subpot = 0
+        for player in self.players_list:
+            if bet >= player.bet:
+                subpot += player.bet
+            else:
+                subpot += bet
 
 
 if __name__ == '__main__':

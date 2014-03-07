@@ -9,10 +9,15 @@ class Player:
         self.points = points
         self.bet = 0
         self.active = True
+        self.all_in = False
         self.hand = []
 
-    def call(self, points):
+    def call(self, points, subpot=None):
         """Place a bet. Might consider renaming this function."""
+        if points >= self.points:
+            points = self.points
+            self.all_in = True
+            self.active = False
         self.points -= points
         self.bet += points
         return points
