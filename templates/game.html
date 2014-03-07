@@ -115,7 +115,7 @@
                         card.className = "col-xs-1 col-xs-offset-4";
 
                         var image = document.createElement("img");
-                        image.src = "../static/images/" + data.community[2] + ".png";
+                        image.src = "../static/images/" + decodeURI(data.community[i][2]) + ".png";
 
                         card.appendChild(image);
 
@@ -128,9 +128,10 @@
                         //Update by determining proper card image
                         var card = document.createElement("div");
                         card.className = "col-xs-6";
-
+                        //alert(data.hand[i]);
                         var image = document.createElement("img");
-                        image.src = "../static/images/" + data.hand[2] + ".png";
+                        var imgname = data.hand[i][2].split('%20').join(' ');
+                        image.src = "../static/images/" + imgname + ".png";
 
                         card.appendChild(image);
 
